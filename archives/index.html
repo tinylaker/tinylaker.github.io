@@ -9,14 +9,14 @@
 <meta name="description" content="个人学习总结">
 <meta name="keywords" content="嵌入式系统">
 <meta property="og:type" content="website">
-<meta property="og:title" content="tags">
-<meta property="og:url" content="http://yoursite.com/tags/index.html">
+<meta property="og:title" content="about">
+<meta property="og:url" content="http://yoursite.com/about/index.html">
 <meta property="og:site_name" content="Tinylaker blog">
 <meta property="og:description" content="个人学习总结">
 <meta property="og:locale" content="en">
-<meta property="og:updated_time" content="2019-09-12T17:58:16.139Z">
+<meta property="og:updated_time" content="2019-09-12T17:58:08.230Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="tags">
+<meta name="twitter:title" content="about">
 <meta name="twitter:description" content="个人学习总结">
 
 
@@ -168,6 +168,10 @@
     </form>
     <div class="tags-list">
     
+    <li class="article-tag-list-item">
+        <a href="javascript:" class="color5">test</a>
+    </li>
+    
     <div class="clearfix"></div>
 </div>
 
@@ -176,10 +180,10 @@
         
         <a  class=""
            href="/2019/09/13/hello-world/"
-           data-tag=""
+           data-tag="test"
            data-author="" >
             <span class="post-title" title="Hello World">Hello World</span>
-            <span class="post-date" title="2019-09-13 00:10:50">2019/09/13</span>
+            <span class="post-date" title="2019-09-13 01:58:08">2019/09/13</span>
         </a>
         
     </nav>
@@ -213,7 +217,6 @@
             <h1 id="Why-Blog"><a href="#Why-Blog" class="headerlink" title="Why Blog"></a>Why Blog</h1><h2 id="对博客的理解"><a href="#对博客的理解" class="headerlink" title="对博客的理解"></a>对博客的理解</h2><p>因为业余时间的碎片化，以前虽然也会做分享和总结，但很少花时间去写博客，觉得这样会浪费时间。<br>现在尝试高效的时间管理，同时寄希望分享自己学习和成长的历程，创建了这个博客空间。</p>
 <h2 id="关于Tinylaker"><a href="#关于Tinylaker" class="headerlink" title="关于Tinylaker"></a>关于Tinylaker</h2><p><strong>Tinylaker</strong> 是 许金龙 (湖人总冠军) 的个人空间，用以记录自己的生活和成长。</p>
 <p>到目前为止已经写了<code class="article_number"></code>篇文章， 共<code class="site_word_count"></code>字。</p>
-<p>本站访问人数：<code class="site_uv"></code>人次 ， 访问量：<code class="site_pv"></code>次</p>
 <h2 id="博客平台"><a href="#博客平台" class="headerlink" title="博客平台"></a>博客平台</h2><p>这个博客通过 <a href="https://hexo.io/">Hexo</a> 生成，部署在 <a href="https://pages.github.com/">GitHub Pages</a>，主题使用开源的 <a href="https://github.com/yelog/hexo-theme-3-hexo">3-hexo</a></p>
 <p>主要功能：</p>
 <ul>
@@ -274,7 +277,7 @@
     /*作者、标签的自动补全*/
     $(function () {
         $('.search').AutoComplete({
-            'data': [],
+            'data': ['#test',],
             'itemHeight': 20,
             'width': 418
         }).AutoComplete('show');
