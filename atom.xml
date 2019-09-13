@@ -5,9 +5,9 @@
   <subtitle>stay hungry stay foolish</subtitle>
   <link href="/atom.xml" rel="self"/>
   
-  <link href="http://yoursite.com/"/>
+  <link href="http://tinylaker.github.io/"/>
   <updated>2019-09-13T14:08:02.616Z</updated>
-  <id>http://yoursite.com/</id>
+  <id>http://tinylaker.github.io/</id>
   
   <author>
     <name>tinylaker</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>Hello World</title>
-    <link href="http://yoursite.com/2019/09/13/hello-world/"/>
-    <id>http://yoursite.com/2019/09/13/hello-world/</id>
+    <link href="http://tinylaker.github.io/hello-world/"/>
+    <id>http://tinylaker.github.io/hello-world/</id>
     <published>2019-09-12T17:58:08.000Z</published>
     <updated>2019-09-13T14:08:02.616Z</updated>
     
@@ -36,7 +36,7 @@
     
     
     
-      <category term="test" scheme="http://yoursite.com/tags/test/"/>
+      <category term="test" scheme="http://tinylaker.github.io/tags/test/"/>
     
   </entry>
   
