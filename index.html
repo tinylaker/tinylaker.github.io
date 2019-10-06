@@ -239,6 +239,131 @@
   
   
   <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/09/30/terminal-for-microcontrol/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/09/30/terminal-for-microcontrol/" class="post-title-link" itemprop="url">terminal for microcontrol</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-09-30 16:05:40" itemprop="dateCreated datePublished" datetime="2019-09-30T16:05:40+08:00">2019-09-30</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-10-06 15:34:16" itemprop="dateModified" datetime="2019-10-06T15:34:16+08:00">2019-10-06</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/第三方库/" itemprop="url" rel="index"><span itemprop="name">第三方库</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 <a href="git@github.com:JingoC/terminal.git">Terminal</a></p>
+<h1 id="Terminal简介"><a href="#Terminal简介" class="headerlink" title="Terminal简介"></a>Terminal简介</h1><p><code>Terminal</code> 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。</p>
+<p>代码的目录结构如下，</p>
+<ul>
+<li><code>lib</code> 中包含自定义的字符串和队列操作。</li>
+<li><code>module</code> 中包含对input解析和log的相关操作。</li>
+<li><code>terminal.h</code> 和 <code>terminal.c</code> 实现了命令行控制台的基本功能，包括初始化、命令添加、命令执行、命令解析等API，供用户直接使用。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">terminal # ls </span><br><span class="line">LICENSE    README.md  def_config examples   lib        module     terminal.c terminal.h</span><br><span class="line">terminal # ls def_config</span><br><span class="line">terminal_config.h</span><br><span class="line">terminal # ls lib</span><br><span class="line">cli_queue.c  cli_queue.h  cli_string.c cli_string.h</span><br><span class="line">terminal #</span><br><span class="line">terminal # ls module</span><br><span class="line">cli_input.c cli_input.h cli_log.c   cli_log.h   cli_time.c  cli_time.h</span><br></pre></td></tr></table></figure>
+
+<h1 id="移植"><a href="#移植" class="headerlink" title="移植"></a>移植</h1><p>参考 <code>examples/Coocox_stm32f4</code>的工程代码和<code>README.md</code>，对当前工程添加自定义配置文件 <code>terminal_config.h</code>。</p>
+<ul>
+<li>使能 <code>TERM_TX_RX_EN</code> 开启输入输出</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#define TERM_TX_RX_EN  (1)    // Terminal Printf (without this don,t work)</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>复写 <code>CLI_Printf</code> 和 <code>CLI_PutChar</code> 输出函数，实现输出重定向</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">#if (TERM_TX_RX_EN == 1)</span><br><span class="line">#include &lt;stdio.h&gt;</span><br><span class="line">#define COM_Printf(...)     printf(__VA_ARGS__)</span><br><span class="line">#define CLI_Printf          COM_Printf</span><br><span class="line">#if (ECHO_EN == 1)</span><br><span class="line">#define CLI_PutChar     putchar</span><br><span class="line">#else   // ECHO_EN != 1</span><br><span class="line">#define CLI_PutChar</span><br><span class="line">#endif  // ECHO_EN == 1</span><br><span class="line"></span><br><span class="line">#else   // TERM_TX_RX_EN != 1</span><br><span class="line">#define CLI_Printf</span><br><span class="line">#define CLI_PutChar</span><br><span class="line">#endif  // TERM_TX_RX_EN == 1</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>设置基本参数<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">#define TERM_SIZE_TASK        (20)    // Max number of commands</span><br><span class="line">#define TERM_CMD_BUF_SIZE     (60)    // Max number of character buffer string command</span><br><span class="line">#define TERM_CMD_LOG_SIZE     (10)    // Max number of loging command</span><br><span class="line">#define TERM_ARGS_BUF_SIZE    (10)    // Max number of arguments in one command</span><br><span class="line">#define TERM_ARG_SIZE         (15)    // Max number character of one arguments</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>另外可以使用 <code>CLI_AddCmd</code> 接口添加自定义命令，<code>CLI_GetArg</code>接口获取参数，参考<code>my_test_commands</code>目录下的代码</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">static uint8_t _t1_cmd();</span><br><span class="line">static uint8_t _t2_cmd();</span><br><span class="line"></span><br><span class="line">void MyTestCmds_Init()</span><br><span class="line">&#123;</span><br><span class="line">    CLI_AddCmd(&quot;t1&quot;, _t1_cmd, 1, TMC_PrintStartTime | TMC_PrintStopTime, &quot;t1 - description command&quot;);</span><br><span class="line">    CLI_AddCmd(&quot;t2&quot;, _t2_cmd, 0, TMC_PrintDiffTime, &quot;t2 - description command&quot;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// ***************** implementation commands ****************</span><br><span class="line"></span><br><span class="line">uint8_t _t1_cmd()</span><br><span class="line">&#123;</span><br><span class="line">    uint32_t a = 0x01;</span><br><span class="line">    uint32_t b = 0x10;</span><br><span class="line">    uint32_t c = 7;</span><br><span class="line"></span><br><span class="line">    // be sure arguments</span><br><span class="line">    c = CLI_GetArgDec(0);</span><br><span class="line"></span><br><span class="line">    // optional arguments</span><br><span class="line">    CLI_GetArgHexByFlag(&quot;-a&quot;, &amp;a);</span><br><span class="line">    CLI_GetArgHexByFlag(&quot;-b&quot;, &amp;b);</span><br><span class="line"></span><br><span class="line">    CLI_Printf(&quot;\r\na: 0x%08X\r\nb: 0x%08X\r\nc: %d&quot;, (int) a, (int) b, (int) c);</span><br><span class="line"></span><br><span class="line">    return TE_OK;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">uint8_t _t2_cmd()</span><br><span class="line">&#123;</span><br><span class="line">    CLI_Printf(&quot;\r\nPress ESC&quot;);</span><br><span class="line">    while(1)</span><br><span class="line">    &#123;</span><br><span class="line">        CLI_CheckAbort();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    return TE_OK;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a>Demo</h1><p>已经移植好的固件，在PC上枚举出虚拟串口，使用minicom打开对应串口设备，能够看到如下的相关打印信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">➜  ~ minicom -D /dev/tty.usbmodem3079385933364</span><br><span class="line"></span><br><span class="line">Welcome to minicom 2.7.1</span><br><span class="line"></span><br><span class="line">OPTIONS:</span><br><span class="line">Compiled on Aug 20 2018, 10:22:42.</span><br><span class="line">Port /dev/tty.usbmodem3079385933364, 11:38:42</span><br><span class="line"></span><br><span class="line">Press Meta-Z for help on special keys</span><br><span class="line"></span><br><span class="line">****************************************************</span><br><span class="line">|                                                  |</span><br><span class="line">|                   Terminal v1.4                  |</span><br><span class="line">|           sw ver.: Sep 10 2018 22:13:54          |</span><br><span class="line">|                                                  |</span><br><span class="line">****************************************************</span><br><span class="line"></span><br><span class="line">Count base command: 4</span><br><span class="line">Max command: 20</span><br><span class="line"></span><br><span class="line">&gt;&gt;</span><br><span class="line">&gt;&gt;</span><br><span class="line">&gt;&gt; help</span><br><span class="line">Count command: 4</span><br><span class="line">[] - mandatory argument</span><br><span class="line">&lt;&gt; - optional argument</span><br><span class="line">| - choice between arguments</span><br><span class="line">~          - reset cpu</span><br><span class="line">settime    - set current time</span><br><span class="line">        settime [h] [m] [s]</span><br><span class="line">gettime    - print current time</span><br></pre></td></tr></table></figure>
+
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/09/16/libusb的使用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -279,7 +404,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-09-29 15:34:30" itemprop="dateModified" datetime="2019-09-29T15:34:30+08:00">2019-09-29</time>
+                <time title="修改时间：2019-09-29 22:54:28" itemprop="dateModified" datetime="2019-09-29T22:54:28+08:00">2019-09-29</time>
               </span>
             
           
@@ -555,7 +680,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">2</span>
+          <span class="site-state-item-count">3</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -581,7 +706,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
