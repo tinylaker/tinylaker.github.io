@@ -239,79 +239,6 @@
   
   
   <div class="post-block home">
-    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/11/10/test/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="tinylaker">
-      <meta itemprop="description" content="个人学习总结">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Tinylaker blog">
-    </span>
-      <header class="post-header">
-        <h1 class="post-title" itemprop="name headline">
-            
-            <a href="/2019/11/10/test/" class="post-title-link" itemprop="url">test</a>
-          
-        </h1>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              
-                
-              
-
-              <time title="创建时间：2019-11-10 13:19:05 / 修改时间：13:19:41" itemprop="dateCreated datePublished" datetime="2019-11-10T13:19:05+08:00">2019-11-10</time>
-            </span>
-          
-            
-
-            
-          
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>1 </p>
-
-        
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-          <div class="post-eof"></div>
-        
-      </footer>
-  </div>
-  
-  
-  
-  </article>
-
-    
-        <article itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -352,7 +279,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-11-10 13:30:16" itemprop="dateModified" datetime="2019-11-10T13:30:16+08:00">2019-11-10</time>
+                <time title="修改时间：2019-11-10 13:39:02" itemprop="dateModified" datetime="2019-11-10T13:39:02+08:00">2019-11-10</time>
               </span>
             
           
@@ -386,7 +313,7 @@
 <h1 id="显示控制器"><a href="#显示控制器" class="headerlink" title="显示控制器"></a>显示控制器</h1><p>下面的截图是显示控制器的组成，包含lcdc和dispc，</p>
 <p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/lcdc.png" alt="lcdc"></p>
 <h1 id="uboot"><a href="#uboot" class="headerlink" title="uboot"></a>uboot</h1><p>lcd相关源码位于 <code>drivers/video/sprdfb</code>，代码文件截图如下:</p>
-<p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/images/sc7731_uboot_lcd.png" alt="sc7731 uboot source code"></p>
+<p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/sc7731_uboot_lcd.png" alt="uboot source code"></p>
 <p>可以看到代码兼容了多款 Soc，Makefile 中也包含了多个平台的配置。</p>
 <p>头文件 <code>include/configs/sp7731gea.h</code>，里面定义了 <code>CONFIG_SC8830</code>。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">#define CONFIG_SC8830</span><br><span class="line">#define CONFIG_DSIH_VERSION_1P21A</span><br><span class="line">#define CONFIG_FB_LCD_NT35516_MIPI</span><br></pre></td></tr></table></figure>
@@ -413,7 +340,7 @@
 
 <h2 id="二、lcd-模组初始化流程"><a href="#二、lcd-模组初始化流程" class="headerlink" title="二、lcd 模组初始化流程"></a>二、lcd 模组初始化流程</h2><p>系统上电执行芯片 <strong>RomCode</strong>，完成 DDR 和外部存储器等常用外设的初始化；</p>
 <p>之后读取外部存储器中的 uboot 并跳转执行，优先完成板级初始化 <code>board_init_f</code> 和 <code>board_init_r</code>，其中 <code>board_init_r</code> 中调用了<code>stdio_init</code>。代码流程图如下：</p>
-<p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/images/sprdfb_uboot_lcd_init.png" alt="sprdfb_lcd_init"></p>
+<p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/sprdfb_uboot_lcd_init.png" alt="sprdfb_lcd_init"></p>
 <p>我们把重点聚焦在 sprdfb_probe 的实现上，下面剔除了部分无关代码。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@ drivers/video/sprdfb/sprdfb_main.c  </span><br><span class="line"></span><br><span class="line">static int sprdfb_probe(void * lcdbase)</span><br><span class="line">&#123;</span><br><span class="line">        struct sprdfb_device *dev = &amp;s_sprdfb_dev;</span><br><span class="line">        set_backlight(0);    //(1)</span><br><span class="line">        dev-&gt;ctrl = &amp;sprdfb_dispc_ctrl;    //(2) </span><br><span class="line">        dev-&gt;ctrl-&gt;early_init(dev);    //(3)</span><br><span class="line">        if (0 != sprdfb_panel_probe(dev)) &#123;    //(4)</span><br><span class="line">                sprdfb_panel_remove(dev);</span><br><span class="line">                dev-&gt;ctrl-&gt;uninit(dev);</span><br><span class="line">                printf(&quot;sprdfb: failed to probe\n&quot;);</span><br><span class="line">                return -EFAULT;</span><br><span class="line">        &#125;</span><br><span class="line">        dev-&gt;smem_start = ((uint32_t)lcdbase);</span><br><span class="line">        dev-&gt;ctrl-&gt;init(dev);    //(5)</span><br><span class="line">        return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -448,7 +375,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">6. sprdfb_dispc_refresh</span><br><span class="line"></span><br><span class="line">这里针对mipi lcd模组，可以简单理解为cmd mode和video mode不同方式刷新显示，这里不再详细分析操作寄存器的部分。</span><br></pre></td></tr></table></figure>
 
 <p>@ drivers/video/sprdfb_dispc.c<br>static int32_t sprdfb_dispc_refresh (struct sprdfb_device *dev)<br>{<br>    if(SPRDFB_PANEL_IF_DPI == dev-&gt;panel_if_type) {    //cmd mode<br>        dispc_set_bits((1&lt;&lt;5), DISPC_DPI_CTRL);<br>        if(is_first_frame){<br>            udelay(30);<br>            dispc_clear_bits((1&lt;&lt;4), DISPC_DPI_CTRL);<br>            dispc_set_bits((1 &lt;&lt; 4), DISPC_CTRL);<br>            is_first_frame = 0;<br>        }<br>    } else {    //video mode<br>        dispc_set_bits((1 &lt;&lt; 4), DISPC_CTRL);<br>        …<br>        dispc_set_bits((1&lt;&lt;0), DISPC_INT_CLR);<br>    }<br>}</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">至此，uboot lcd的初始化和刷新显示已经分析完成了。</span><br><span class="line"></span><br><span class="line"># kernel</span><br><span class="line"></span><br><span class="line">lcd 相关代码如下图：</span><br><span class="line">![sprdfb kernel code](../images/sprd_kernel_lcd.png)</span><br><span class="line"></span><br><span class="line">和 uboot 代码架构基本相似，下面以 `lcd_nt35516_mipi.c `为例进行分析</span><br><span class="line"></span><br><span class="line">## 一、lcd模组配置</span><br><span class="line"></span><br><span class="line">驱动文件放置路径:  `drivers/video/sprdfb/lcd/lcd_nt35516_mipi.c`</span><br><span class="line"></span><br><span class="line">- drivers/video/sprdfb/lcd/Makefile </span><br><span class="line">包含编译该屏驱动的配置</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">至此，uboot lcd的初始化和刷新显示已经分析完成了。</span><br><span class="line"></span><br><span class="line"># kernel</span><br><span class="line"></span><br><span class="line">lcd 相关代码如下图：</span><br><span class="line">![sprdfb kernel code](sc7731-lcd流程分析/sprd_kernel_lcd.png)</span><br><span class="line"></span><br><span class="line">和 uboot 代码架构基本相似，下面以 `lcd_nt35516_mipi.c `为例进行分析</span><br><span class="line"></span><br><span class="line">## 一、lcd模组配置</span><br><span class="line"></span><br><span class="line">驱动文件放置路径:  `drivers/video/sprdfb/lcd/lcd_nt35516_mipi.c`</span><br><span class="line"></span><br><span class="line">- drivers/video/sprdfb/lcd/Makefile </span><br><span class="line">包含编译该屏驱动的配置</span><br></pre></td></tr></table></figure>
 
 <p>obj-$(CONFIG_FB_LCD_NT35516_MIPI)  += lcd_nt35516_mipi.o=</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">- drivers/video/sprdfb/Kconfig</span><br></pre></td></tr></table></figure>
@@ -511,7 +438,7 @@ fb0: fb@20800000 {
 <p>#endif<br>        .remove = sprdfb_remove,<br>        .driver = {<br>                .name = “sprd_fb”,<br>                .owner = THIS_MODULE,</p>
 <p>#ifdef CONFIG_OF<br>                .of_match_table = of_match_ptr(sprdfb_dt_ids),</p>
 <p>#endif<br>        },<br>};<br>static int __init sprdfb_init(void)<br>{<br>        return platform_driver_register(&amp;sprdfb_driver);<br>}</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">基本匹配流程如下图：</span><br><span class="line">![sprd kernel lcd probe](../images/sprd_kernel_lcd_init.png)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">**sprdfb_probe** 函数的定义</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">基本匹配流程如下图：</span><br><span class="line">![sprd kernel lcd probe](sc7731-lcd流程分析/sprd_kernel_lcd_init.png)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">**sprdfb_probe** 函数的定义</span><br></pre></td></tr></table></figure>
 
 <p>static int sprdfb_probe(struct platform_device *pdev)<br>{<br>    struct fb_info *fb = NULL;<br>    struct sprdfb_device *dev = NULL;<br>    struct resource r;</p>
 <pre><code>fb = framebuffer_alloc(sizeof(struct sprdfb_device), &amp;pdev-&gt;dev);    //(1)分布帧缓冲使用空间
@@ -1190,7 +1117,7 @@ framebuffer驱动已经通过fb_ops 向用户空间提供了文件操作接口�
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-count">4</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
