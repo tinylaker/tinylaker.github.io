@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Tinylaker blog" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文记录总结了笔者曾经参与的sc770x项目，基于 Trace32 Simulator 定位系统稳定性问题，这是 Lauterbach 公司推出的一款嵌入式系统调试工具，支持多种 CPU 和 RTOS 调试，拥有很强的扩展性，支持CMM脚本扩展。 工具的使用一般死机会保存对应的 ass 和 mem文件，打开 Trace32 Simulator ，导入 sc770x_simulator.cmm 脚">
+<meta name="keywords" content="stability">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sc770x-稳定性问题分析">
+<meta property="og:url" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/index.html">
+<meta property="og:site_name" content="Tinylaker blog">
+<meta property="og:description" content="本文记录总结了笔者曾经参与的sc770x项目，基于 Trace32 Simulator 定位系统稳定性问题，这是 Lauterbach 公司推出的一款嵌入式系统调试工具，支持多种 CPU 和 RTOS 调试，拥有很强的扩展性，支持CMM脚本扩展。 工具的使用一般死机会保存对应的 ass 和 mem文件，打开 Trace32 Simulator ，导入 sc770x_simulator.cmm 脚">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/1.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/2.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/3.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/4.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/5.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/6.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/7.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/8.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/9.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/10.png">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/11.png">
+<meta property="og:updated_time" content="2019-12-04T09:11:22.687Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sc770x-稳定性问题分析">
+<meta name="twitter:description" content="本文记录总结了笔者曾经参与的sc770x项目，基于 Trace32 Simulator 定位系统稳定性问题，这是 Lauterbach 公司推出的一款嵌入式系统调试工具，支持多种 CPU 和 RTOS 调试，拥有很强的扩展性，支持CMM脚本扩展。 工具的使用一般死机会保存对应的 ass 和 mem文件，打开 Trace32 Simulator ，导入 sc770x_simulator.cmm 脚">
+<meta name="twitter:image" content="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/1.png">
+  <link rel="canonical" href="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>sc770x-稳定性问题分析 | Tinylaker blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?ddfa4a6ba83ff65311f95d251f9389b3";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tinylaker blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">stay hungry stay foolish</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">sc770x-稳定性问题分析
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-11-14 21:03:01" itemprop="dateCreated datePublished" datetime="2019-11-14T21:03:01+08:00">2019-11-14</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-04 17:11:22" itemprop="dateModified" datetime="2019-12-04T17:11:22+08:00">2019-12-04</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Product/" itemprop="url" rel="index"><span itemprop="name">Product</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文记录总结了笔者曾经参与的sc770x项目，基于 Trace32 Simulator 定位系统稳定性问题，这是 Lauterbach 公司推出的一款嵌入式系统调试工具，支持多种 CPU 和 RTOS 调试，拥有很强的扩展性，支持CMM脚本扩展。</p>
+<h1 id="工具的使用"><a href="#工具的使用" class="headerlink" title="工具的使用"></a>工具的使用</h1><p>一般死机会保存对应的 ass 和 mem文件，打开 Trace32 Simulator ，导入 sc770x_simulator.cmm 脚本，加载当前系统版本对应的 axf 符号表文件。此时会提示输入 mem 地址，根据死机时保存的 ass 文件确定为0，然后再选择对应的 mem 文件，一般直接能够看到从 thread_entry 到死机现场的函数回调。如果不幸没有看到完整的回调，那么就需要自己进行推导，类似下面的情况。</p>
+<p>查看死机状态时 _tx_thread_current_ptr 的值，根据 tx_thread_name 得知当前是 T_MIDI Task 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">_tx_thread_current_ptr = 0x01D8FADC -&gt; (</span><br><span class="line">  tx_thread_id = 1414025796,</span><br><span class="line">  tx_run_count = 20,</span><br><span class="line">  tx_stack_ptr = 0x027D6E88,</span><br><span class="line">  tx_stack_start = 0x027D68B8,</span><br><span class="line">  tx_stack_end = 0x027D7CB3,</span><br><span class="line">  tx_stack_size = 5116,</span><br><span class="line">  tx_time_slice = 0,</span><br><span class="line">  tx_new_time_slice = 0,</span><br><span class="line">  tx_ready_next = 0x01D8FADC,</span><br><span class="line">  tx_ready_previous = 0x01D8FADC,</span><br><span class="line">  tx_thread_name = 0x080467A8 -&gt; &quot;T_MIDI&quot;,</span><br><span class="line">  tx_priority = 74,</span><br><span class="line">  tx_state = 0,</span><br><span class="line">  tx_delayed_suspend = 0,</span><br><span class="line">  tx_suspending = 0,</span><br><span class="line">  tx_preempt_threshold = 74,</span><br><span class="line">  tx_priority_bit = (0, 0, 1024, 0, 0, 0, 0, 0),</span><br><span class="line">  tx_thread_entry = 0x0035B4F7,</span><br><span class="line">  tx_entry_parameter = 66011532,</span><br><span class="line">  tx_thread_timer = (tx_remaining_ticks = 0, tx_re_initialize_ticks = 0, tx_timeout_function =</span><br><span class="line">  tx_suspend_cleanup = 0x0,</span><br><span class="line">  tx_suspend_control_block = 0x0,</span><br><span class="line">  tx_suspended_next = 0x0,</span><br><span class="line">  tx_suspended_previous = 0x0,</span><br><span class="line">  tx_suspend_info = 0,</span><br><span class="line">  tx_additional_suspend_info = 0x0,</span><br><span class="line">  tx_suspend_option = 0,</span><br><span class="line">  tx_suspend_status = 0,</span><br><span class="line">  tx_created_next = 0x00C1BBA4,</span><br><span class="line">  tx_created_previous = 0x01D8F884,</span><br><span class="line">  tx_filex_ptr = 0x0,</span><br><span class="line">  time = 0,</span><br><span class="line">  tx_thread_stack_highest_ptr = 0x027D6CF8)</span><br></pre></td></tr></table></figure>
+
+<p>当前 Task 的栈的起始地址是 0x027D68B8，结束地址是 0x027D7CB3 ，查看对应地址的 data.dump 内存窗口。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tx_stack_start = 0x027D68B8,</span><br><span class="line">tx_stack_end = 0x027D7CB3,</span><br><span class="line">tx_stack_size = 5116,</span><br></pre></td></tr></table></figure>
+
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/1.png" alt></p>
+<p>从 ass 文件中查看死机前 SVC 模式下寄存器的值，以 R13_SVC 为起始地址，按照函数调用的堆栈原则推导。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&gt; SVC mode:</span><br><span class="line">R13 = 0x027d6f70    R14  = 0xfffffffc</span><br><span class="line">SPSR = 0x20000033</span><br></pre></td></tr></table></figure>
+
+<p>找到以0x08开头的函数地址，将其作为 R14，函数压栈结束地址作为 R13，正向推栈的方法是 <code>tx_stack_end -&gt; R13_SVC</code>，反向推栈的方法是 <code>R13_SVC -&gt; tx_stack_end</code>。当我们按照这个方法，就能获得完整的 callback 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br></pre></td><td class="code"><pre><span class="line">-001|MIDI_Core_Calculation_dls_stereo(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    sample_pool_ptr = 0x027D95D6,</span><br><span class="line">    |    sample_pool_r_ptr = 0x027D9716,</span><br><span class="line">    |    spn = 0)</span><br><span class="line">    |  pContext = 0x027D9478</span><br><span class="line">    |  VoiceChnPtr = 0x027DA52C</span><br><span class="line">    |  pcm_count = 74</span><br><span class="line">    |  temp_pcm_l = 0x027DBD94</span><br><span class="line">    |  temp_pcm_r = 0x027DC014</span><br><span class="line">    |  update = 1</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-002|MIDI_Core_Generate_Samples(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  pContext = 0x027D9478</span><br><span class="line">    |  samples_num = 640</span><br><span class="line">    |  cur_samples = 160</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-003|midi_decode(inline)</span><br><span class="line">-003|midi_play(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    midi_dataPtr = 0x027D7634)</span><br><span class="line">    |  pContext = 0x027D9478</span><br><span class="line">    |  midi_event = ((start_time = 0, event_type = 255, isReady = 0, sub_event_type = 47, pa</span><br><span class="line">    |  midi_event_to_play = 0x027D7060</span><br><span class="line">    |  bytes_processed = 1</span><br><span class="line">    |  result = 0</span><br><span class="line">    |  cur_midi_event = (start_time = 35, event_type = 144, isReady = 0, sub_event_type = 0,</span><br><span class="line">    |  min_time = 18</span><br><span class="line">    |  track_end_num = 1</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-004|MIDI_PlayMidi(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    mididata = 0x00CD5A58,</span><br><span class="line">    |    file_length = 5656)</span><br><span class="line">    |  pContext = 0x027D9478</span><br><span class="line">    |  midi_track_data = (track = ((file_start = 22, length = 37, buffer_addr = 0x00CD5A6E,</span><br><span class="line">    |  PPQN = 120</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-005|MidiPlayFile(inline)</span><br><span class="line">-005|MIDI_Thread_Entry(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  audio_obj = 0x0278E944</span><br><span class="line">    |  sig_in_ptr = 0x0</span><br><span class="line">    |  sig_out_ptr = 0x0</span><br><span class="line">    |  ptMidiProcRes = 0x03F8FD80</span><br><span class="line">    |  time_offset = 0</span><br><span class="line">    |  samples_offset = 0</span><br><span class="line">    |  result = 0</span><br><span class="line">    |  midi_res_ptr = 0x03F8FD80</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-006|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x08046340, argc = 41478468, argv = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-007|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>我们可以根据 callback 获得死机步骤场景和参数（但参数并不一定准确），推导时如果无法推进就进行参数代入试验和猜测再反向验证的方法，以便使到 callback 向更深推进，以达到死机现场，便于进一步的分析问题。</p>
+<h1 id="问题分析"><a href="#问题分析" class="headerlink" title="问题分析"></a>问题分析</h1><p>一般根据 ass 文件提示的 assert 信息，能够大概了解死机的原因。</p>
+<ul>
+<li>最基本的 assert 信息，根据打印信息可以知道问题代码，直接分析原因。</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">File:nfc_drv_v1.c Line:  501 PASSERT(0) &gt; NFC timeout happened!f=4,e=0</span><br></pre></td></tr></table></figure>
+
+<h2 id="内存泄漏"><a href="#内存泄漏" class="headerlink" title="内存泄漏"></a>内存泄漏</h2><p>一般是使用 SCI_ALLOC 申请内存后，却没有调用 SCI_FREE 释放对应内存，导致内存泄漏。</p>
+<p>Threadx 在内存管理中定义了 block pool 和 byte pool 两种概念，byte pool 设置固定大小的内存池，支持可变的内存申请释放，但是会存在碎片化问题，而block pool 设定不同大小的 block，方便快速申请释放，不会存在碎片化问题，性能上比 byte pool 会更有效率。</p>
+<p>笔者曾根据 byte pool 和 block pool 分配的规则，编写了 mocor_byte_pool_list.cmm 和 mocor_block_pool_list.cmm 脚本，用来检查 heap 和 pool 两种内存空间的分配是否存在异常，有助于分析内存覆盖等问题。</p>
+<ul>
+<li>通过 ArmLogel trace 定位</li>
+</ul>
+<ol>
+<li><p>手机连接 ArmLogel 工具，通过 ［SysInfo］-&gt;[Memory Status] 和［SysInfo］-&gt;[Memory Allocated Status] 将内存池信息和内存分配情况打印出来。</p>
+</li>
+<li><p>打开应用测试，然后通过相同方式保存内存信息。</p>
+</li>
+<li><p>如此重复多次，对比保存文件中的内存信息差异，确定是否有规律可循。如果存在内存泄漏，可通过<code>Allocated memory info</code> 信息对比查找泄漏源。</p>
+</li>
+</ol>
+<ul>
+<li>通过工具 Assert 定位</li>
+</ul>
+<p>出现内存问题时，查看 Assert 后的 ass 文件，打印的 Assert 信息的过程实际上是对当前系统处于 Assert 状态时的 Pool 内存和 Heap 内存信息检查的过程，通过观察内存信息输出的完整性检查，基本可以看出来系统的内存是否正常。</p>
+<ol>
+<li>Assert 后弹出界面有如下信息：</li>
+</ol>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/2.png" alt="assert"></p>
+<ol start="2">
+<li>按5输出内存池 Pool 和 Heap 使用情况，如果有大批内存池耗光（Avail_Num 为0），有可能是内存泄漏问题。</li>
+</ol>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/3.png" alt="memory"><br><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/4.png" alt="memory"></p>
+<ol start="3">
+<li>按4输出内存池的详细分配信息，可以查找哪些文件在大量申请内存，观察规律是否存在内存泄漏。</li>
+</ol>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/5.png" alt="memory"></p>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/6.png" alt="memory"></p>
+<h2 id="内存越界"><a href="#内存越界" class="headerlink" title="内存越界"></a>内存越界</h2><p>内存越界是由于编程不当导致的内存越界覆盖，实际使用的内存空间大于申请的内存范围，比较常见的是 memcpy 时，数据源太长，导致内存end_flag被覆盖。此类问题需要找到发生内存越界之前的内存块，仔细分析该内存块的使用序列，是否有可能造成内存越界访问。</p>
+<h3 id="block-pool"><a href="#block-pool" class="headerlink" title="block pool"></a>block pool</h3><p>比如下面这种 block pool 越界的情况：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br></pre></td><td class="code"><pre><span class="line">-000|TXAS_SaveMainReg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    cur_lr = 0x0108D1C2,</span><br><span class="line">    |    cur_pc = 0x80)</span><br><span class="line">-001|TXAS_SystemAssert(</span><br><span class="line">    |    exp = 0x0021229C,</span><br><span class="line">    |    file = 0x00212224,</span><br><span class="line">    |    line = 118,</span><br><span class="line">    |    assert_info_ptr = 0x0)</span><br><span class="line">    |  assert_mode = 1</span><br><span class="line">    |  cur_sp = 36771216</span><br><span class="line">    |  cur_lr = 3422259</span><br><span class="line">    |  cur_pc = 7799016</span><br><span class="line">    |  i = 0</span><br><span class="line">-002|system_fatal_error_handler(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|osa_fatal_error_handler_info(</span><br><span class="line">    |    error_message_ptr = 0x0021229C,</span><br><span class="line">    |    error_code = OSA_ERROR_BUFFMNGR_ISVALID_FAILED,</span><br><span class="line">    |    os_error_code = 101,</span><br><span class="line">    |    file = 0x00212224,</span><br><span class="line">    |    line = 118)</span><br><span class="line">-004|osa_validate_buff_footer(</span><br><span class="line">    |    usr_buff = 0x03FD908C,</span><br><span class="line">    |    curr_alloc_size = 1052)</span><br><span class="line">-005|osa_int_release_buffer(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |    dealloc_file = 0,</span><br><span class="line">    |    dealloc_line = 1050)</span><br><span class="line">    |  buff_hdr_p = 0x03FD906C</span><br><span class="line">-006|SCI_Release_Buffer(</span><br><span class="line">    |    buff_ptr = 0x03FD908C,</span><br><span class="line">    |    entity_id = 3,</span><br><span class="line">    |    dealloc_file = 0,</span><br><span class="line">    |    dealloc_line = 1050)</span><br><span class="line">    |  debug_buff_ptr = 0x03FD908C</span><br><span class="line">-007|SCI_Free(</span><br><span class="line">    |    memory_ptr = 0x03FD908C)</span><br><span class="line">    |  free_ptr = 0x00345A95</span><br><span class="line">-008|SendMultiPicByBt()</span><br><span class="line">    |  pic_info = (filename = (68, 58, 92, 80, 104, 111, 116, 111, 115, 92, 68, 83, 67, 95</span><br><span class="line">    |  send_file_info = 0x03FD9090</span><br><span class="line">    |  list_ctrl_id = 2359329</span><br><span class="line">    |  send_file_num = 2</span><br><span class="line">    |  i = 3</span><br><span class="line">    |  total_num = 3</span><br><span class="line">-009|HandleShareItemsPiclistOptWinMsg(</span><br><span class="line">    |    win_id = 2359302,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  title_str = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">    |  result = 1</span><br><span class="line">    |  ctrl_id = 2359331</span><br><span class="line">    |  list_ctrl_id = 2359329</span><br><span class="line">    |  menu_id = 2359331</span><br><span class="line">    |  group_id = 2359299</span><br><span class="line">    |  kstring = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">-010|MMK_RunWinProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 57345,</span><br><span class="line">    |    param = 0x03E983C8)</span><br><span class="line">-011|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 1103560803,</span><br><span class="line">    |    msg_id = 57345,</span><br><span class="line">    |    param_ptr = 0x03E983C8)</span><br><span class="line">    |  openwin_handle_result = 0</span><br><span class="line">    |  old_handle = 16711680</span><br><span class="line">-012|MMK_DispatchWinMSG(</span><br><span class="line">    |    mmi_msg_ptr = 0x03FA1300)</span><br><span class="line">-013|MMK_DispatchMSGQueue(</span><br><span class="line">    |  ?)</span><br><span class="line">-014|thread_entry_P_APP(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  receiveSignal = 0x0</span><br><span class="line">    |  mmi_msg = 0x03FA1300</span><br><span class="line">    |  ticks1 = 0</span><br><span class="line">    |  ticks2 = 0</span><br><span class="line">    |  is_log_on = 0</span><br><span class="line">    |  time_period = 4294967295</span><br><span class="line">    |  watchdog_ptr = 0x03ECF2EC</span><br><span class="line">-015|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x0833AF73, argc = 0, argv = 0x0)</span><br><span class="line">-016|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>在释放 0x03FD908C 内存地址空间时，函数 osa_validate_buff_footer 检查 block pool 的时候发现找不到 end flag 导致 assert。</p>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/7.png" alt="memory"></p>
+<p>根据 threadx 内存分配原则，0x03FD94A8 地址内存的值应该是 0xF2F2F2F2，但是实际上是 0x003A0044。分析这个代码逻辑，发现原因是 SendMultiPicByBt 中 send_file_num 和 total_num 不相等导致内存越界。</p>
+<h3 id="byte-pool"><a href="#byte-pool" class="headerlink" title="byte pool"></a>byte pool</h3><p>还有一种 byte pool 越界情况：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br></pre></td><td class="code"><pre><span class="line">-000|tx_byte_pool_search_ex(</span><br><span class="line">    |    pool_ptr = 0x00B68A14,</span><br><span class="line">    |    memory_size = 552)</span><br><span class="line">    |  interrupt_save = 536870912</span><br><span class="line">    |  current_ptr = 0x80818081</span><br><span class="line">    |  examine_blocks = 119</span><br><span class="line">    |  alloc_ptr = 0x025F385C</span><br><span class="line">    |  min_size = 32</span><br><span class="line">    |  section_limit_space_addr = 0x0</span><br><span class="line">    |  section_limit_space_size = 4294967295</span><br><span class="line">    |  section_high_space_addr = 0x0</span><br><span class="line">    |  section_high_space_size = 4294967295</span><br><span class="line">    |  search_cnt = 484</span><br><span class="line">-001|tx_byte_allocate(</span><br><span class="line">    |    pool_ptr = 0x00B68A14,</span><br><span class="line">    |    memory_ptr = 0x02320998,</span><br><span class="line">    |  ?,</span><br><span class="line">    |    wait_option = 2863311530)</span><br><span class="line">    |  thread_ptr = 0x01CBAAD8</span><br><span class="line">-002|txe_byte_allocate(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|SCI_MallocEx(</span><br><span class="line">    |    size = 520,</span><br><span class="line">    |    type = 1145324612,</span><br><span class="line">    |    file = 0x08652448,</span><br><span class="line">    |    line = 143)</span><br><span class="line">    |  memory_ptr = 0x0</span><br><span class="line">    |  num_free_buffs = 0</span><br><span class="line">    |  cur_pool_inx = 14</span><br><span class="line">    |  alloc_size = 549</span><br><span class="line">    |  byte_mem_header_ptr = 0x0</span><br><span class="line">-004|allocatePName(</span><br><span class="line">    |    pName = 0x023210EC)</span><br><span class="line">-005|SFS_CreateFileInternal(</span><br><span class="line">    |    file_name = 0x023210EC,</span><br><span class="line">    |    access_mode = 49,</span><br><span class="line">    |    share_mode = 0,</span><br><span class="line">    |    file_attri = 0)</span><br><span class="line">    |  __func__ = (83, 70, 83, 95, 67, 114, 101, 97, 116, 101, 70, 105, 108, 101</span><br><span class="line">    |  handle = 0</span><br><span class="line">-006|DrmParseDCF(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  ret_val = 0</span><br><span class="line">-007|DrmCheckIsDRM(</span><br><span class="line">    |    file_name_ptr = 0x023210EC)</span><br><span class="line">    |  ret_val = 0</span><br><span class="line">-008|DRM_CreateFile(</span><br><span class="line">    |    file_name_ptr = 0x023210EC,</span><br><span class="line">    |    access_mode = 49,</span><br><span class="line">    |    share_mode = 0,</span><br><span class="line">    |    file_attribute = 0)</span><br><span class="line">    |  drm_handle_f = 2555905</span><br><span class="line">    |  drm_file_ptr = 0x014D1904</span><br><span class="line">    |  drm_io_handle = 0</span><br><span class="line">-009|SFS_CreateFile(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-010|MMIFILE_CreateFile(</span><br><span class="line">    |    file_name = 0x023210EC,</span><br><span class="line">    |    access_mode = 49,</span><br><span class="line">    |    share_mode = 0,</span><br><span class="line">    |    file_attri = 0)</span><br><span class="line">    |  handle = 0</span><br><span class="line">-011|MMIPICVIEW_IsSend(</span><br><span class="line">    |    is_sms = 0,</span><br><span class="line">    |    file_data_ptr = 0x023210EC)</span><br><span class="line">    |  result = 0</span><br><span class="line">    |  file_info = (file_name = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  send_file_info = (filepath_name = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">-012|SendMultiPicByBt()</span><br><span class="line">    |  pic_info = (filename = (69, 58, 92, 86, 105, 100, 101, 111, 92, 77, 79, 8</span><br><span class="line">    |  send_file_info = 0x0268B9D0</span><br><span class="line">    |  list_ctrl_id = 2359329</span><br><span class="line">    |  send_file_num = 5</span><br><span class="line">    |  i = 6</span><br><span class="line">    |  total_num = 7</span><br><span class="line">-013|HandleShareItemsPiclistOptWinMsg(</span><br><span class="line">    |    win_id = 2359302,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  title_str = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">    |  result = 1</span><br><span class="line">    |  ctrl_id = 2359331</span><br><span class="line">    |  list_ctrl_id = 2359329</span><br><span class="line">    |  menu_id = 2359331</span><br><span class="line">    |  group_id = 2359299</span><br><span class="line">    |  kstring = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">-014|MMK_RunWinProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 57345,</span><br><span class="line">    |    param = 0x03E9BB08)</span><br><span class="line">-015|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 2632974468,</span><br><span class="line">    |    msg_id = 57345,</span><br><span class="line">    |    param_ptr = 0x03E9BB08)</span><br><span class="line">    |  openwin_handle_result = 0</span><br><span class="line">    |  old_handle = 16711680</span><br><span class="line">-016|MMK_DispatchWinMSG(</span><br><span class="line">    |    mmi_msg_ptr = 0x03FA14E0)</span><br><span class="line">-017|MMK_DispatchMSGQueue(</span><br><span class="line">    |  ?)</span><br><span class="line">-018|thread_entry_P_APP(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  receiveSignal = 0x0</span><br><span class="line">    |  mmi_msg = 0x03FA14E0</span><br><span class="line">    |  ticks1 = 0</span><br><span class="line">    |  ticks2 = 0</span><br><span class="line">    |  is_log_on = 0</span><br><span class="line">    |  time_period = 4294967295</span><br><span class="line">    |  watchdog_ptr = 0x03ECF298</span><br><span class="line">-019|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x08650E7B, argc = 0, argv = 0x0)</span><br><span class="line">-020|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>从死机处代码逻辑和 callback 中并没有看出问题，但是却在申请内存过程中，遍历 byte pool 出错。那么怀疑内存区域中存在异常，可能存在被覆盖的情况。使用 mocor_block_pool_list.cmm 脚本检查 byte pool 内存空间：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">byte_static_heap:       0x0B68984</span><br><span class="line">byte_dynamic_base_heap: 0x0B689CC</span><br><span class="line">byte_dynamic_app_heap:  0x0B68A14</span><br><span class="line">pool start address:     0x24FF4D4</span><br><span class="line">pool end address:       0x3E878FC</span><br><span class="line">pool addr: 0x24FF4D4</span><br><span class="line">     size: 0x888</span><br><span class="line"></span><br><span class="line">～～～</span><br><span class="line">pool addr: 0x268B9AC</span><br><span class="line">     size: 0x0A64</span><br><span class="line">pool addr: 0x268C410</span><br><span class="line">pool memory end: 0x56005C</span><br><span class="line">pool count: 0x1E1</span><br></pre></td></tr></table></figure>
+
+<p>0x268B9AC 处的内存节点正常，但是 0x268C410 处的内存节点已经异常，end_flag:0xAA 已经丢失，变成了一片非法数据。</p>
+<p>按照函数 tx_byte_pool_search_ex 代码逻辑，最终会导致 0 地址访问，<code>R5=0x80818081</code>，然后执行 <code>ldr r0,[r5,#04]</code> ，导致4字节对齐异常死机 (这个和 assert 文件中的错误提示也是匹配的：Fault address :0x80818085 )。</p>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/8.png" alt="memory"></p>
+<p>查看 0x268B9AC 地址空间的内存分配情况，如下：</p>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/9.png" alt="memory"></p>
+<p>分析 mmipicview_wintab.c 文件中内存分配和使用的代码，发现是 SendMultiPicByBT 函数中针对 send_file_info 分配的内存使用时存在越界操作，从而引发了上面的问题。</p>
+<h2 id="内存覆盖"><a href="#内存覆盖" class="headerlink" title="内存覆盖"></a>内存覆盖</h2><p>导致内存覆盖原因很多，空指针的操作会操作 0 地址，相对比较容易检查，因为 0 地址一般是 DSP code 区域，可以通过BUSMonitor 辅助监控 code 区域，定位到覆盖代码段的源头。</p>
+<p>野指针的操作比较复杂，可以利用 pool_list.cmm 脚本检查内存分配的完整性，也可以通过 dump memory 内容进行比对，寻找覆盖来源。</p>
+<p>死机现场：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">File:  tx_byta.c</span><br><span class="line">Line:  240</span><br><span class="line">ASSERT(current_ptr != (*((CHAR_PTR *) current_ptr)))</span><br></pre></td></tr></table></figure>
+
+<p>推导出 callback</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br></pre></td><td class="code"><pre><span class="line">-000|TXAS_SaveMainReg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    cur_lr = 0x0108D1CE,</span><br><span class="line">    |    cur_pc = 0x80)</span><br><span class="line">-001|TXAS_SystemAssert(</span><br><span class="line">    |    exp = 0x00215CAC,</span><br><span class="line">    |    file = 0x00215C5C,</span><br><span class="line">    |    line = 240,</span><br><span class="line">    |    assert_info_ptr = 0x0)</span><br><span class="line">    |  assert_mode = 1</span><br><span class="line">    |  cur_sp = 38244696</span><br><span class="line">    |  cur_lr = 3672209</span><br><span class="line">    |  cur_pc = 8536932</span><br><span class="line">    |  i = 12387240</span><br><span class="line">-002|SCI_Assert(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|tx_byte_pool_search_ex(</span><br><span class="line">    |    pool_ptr = 0x00C35B3C,</span><br><span class="line">    |    memory_size = 307776)</span><br><span class="line">    |  interrupt_save = 536870912</span><br><span class="line">    |  examine_blocks = 85</span><br><span class="line">    |  alloc_ptr = 0x0</span><br><span class="line">    |  min_size = 4294967295</span><br><span class="line">    |  section_limit_space_addr = 0x0</span><br><span class="line">    |  section_limit_space_size = 4294967295</span><br><span class="line">    |  section_high_space_addr = 0x0</span><br><span class="line">    |  section_high_space_size = 4294967295</span><br><span class="line">    |  search_cnt = 150</span><br><span class="line">-004|tx_byte_allocate(</span><br><span class="line">    |    pool_ptr = 0x00C35B3C,</span><br><span class="line">    |    memory_ptr = 0x02479238,</span><br><span class="line">    |  ?,</span><br><span class="line">    |    wait_option = 2863311530)</span><br><span class="line">    |  thread_ptr = 0x01E10380</span><br><span class="line">-005|txe_byte_allocate(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-006|SCI_MallocApp(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    file = 0x0904406C,</span><br><span class="line">    |    line = 5942)</span><br><span class="line">    |  memory_ptr = 0x0</span><br><span class="line">    |  num_free_buffs = 0</span><br><span class="line">    |  cur_pool_inx = -1</span><br><span class="line">    |  alloc_size = 307773</span><br><span class="line">    |  byte_mem_header_ptr = 0x0</span><br><span class="line">-007|BL_MallocEx(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    file = 0x0904406C,</span><br><span class="line">    |    line = 5942)</span><br><span class="line">    |  index = 2</span><br><span class="line">-008|MMI_BL_Malloc(</span><br><span class="line">    |    id = 270,</span><br><span class="line">    |    file = 0x0904406C,</span><br><span class="line">    |    line = 5942)</span><br><span class="line">-009|AllocTrans3DBuf(</span><br><span class="line">    |    old_buf_pptr = 0x024792BC,</span><br><span class="line">    |    new_buf_pptr = 0x024792B8)</span><br><span class="line">    |  result = 0</span><br><span class="line">-010|MMIDEFAULT_SaveOldMoveBuf(</span><br><span class="line">    |    buf_type = SCR_EFFECT_BUF_TYPE_SLIDE_RIPPLE = SCR_EFFECT_BUF_TYPE_WIN_SWITCH)</span><br><span class="line">    |  buf_ptr = 0x0265D100</span><br><span class="line">    |  buf_width = 240</span><br><span class="line">    |  old_buf_ptr = 0x0</span><br><span class="line">    |  new_buf_ptr = 0x0</span><br><span class="line">-011|HandleMenuOkKey(</span><br><span class="line">    |    menu_ctrl_ptr = 0x03FE0420,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  is_handled = 0</span><br><span class="line">    |  is_grayed = 0</span><br><span class="line">    |  is_exist_child = 1</span><br><span class="line">    |  cur_item_top = 0</span><br><span class="line">    |  base_ctrl_ptr = 0x03FE0420</span><br><span class="line">    |  cur_item = (menu_id = 0, tip_id = 0, button_id = (0, 0, 0), text_str_id = 0, select_icon</span><br><span class="line">    |  cur_node_ptr = 0x027DC338</span><br><span class="line">    |  lcd_dev_info = 0x092B5920</span><br><span class="line">    |  lcd_rect = (left = 0, top = 0, right = 239, bottom = 319)</span><br><span class="line">-012|MenuHandleMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param = 0x02479404)</span><br><span class="line">    |  result = 1</span><br><span class="line">    |  menu_ctrl_ptr = 0x03FE0420</span><br><span class="line">-013|VTLCTRL_HandleMsg(</span><br><span class="line">    |    iguictrl_ptr = 0x03FE0420,</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param_ptr = 0x02479404)</span><br><span class="line">-014|MMK_RunCtrlProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param = 0x02479404)</span><br><span class="line">    |  me_ptr = 0x03FE0420</span><br><span class="line">-015|MMK_DefaultProcessWinMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param = 0x02479404)</span><br><span class="line">    |  result = 0</span><br><span class="line">    |  ctrl_handle = 1288896624</span><br><span class="line">-016|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 1288765504,</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param_ptr = 0x02479404)</span><br><span class="line">    |  bResult = 0</span><br><span class="line">    |  old_handle = 16711680</span><br><span class="line">-017|MMK_DispMsgToFocusWin(</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |    param_ptr = 0x02479404)</span><br><span class="line">-018|MMK_DispMsgToWin(</span><br><span class="line">    |    msg_id = 64027,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  result = 0</span><br><span class="line">-019|HandleMSGKbd(</span><br><span class="line">    |    keys_status = 64000,</span><br><span class="line">    |    key_code = 27)</span><br><span class="line">    |  multi_key_tp_param = (is_slide = 0, pre_tp_point = (x = 0, y = 0), cur_tp_point = (x = 0</span><br><span class="line">-020|MMK_DispatchMSGKbd(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  keypress_ptr = 0x03EB1488</span><br><span class="line">    |  key_code = 27</span><br><span class="line">    |  is_long_press = 0</span><br><span class="line">-021|MMK_DispatchExtSig(</span><br><span class="line">    |  ?)</span><br><span class="line">-022|thread_entry_P_APP(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  receiveSignal = 0x03EB1488</span><br><span class="line">    |  mmi_msg = 0x03FA0600</span><br><span class="line">    |  ticks1 = 0</span><br><span class="line">    |  ticks2 = 0</span><br><span class="line">    |  is_log_on = 0</span><br><span class="line">    |  time_period = 4294967295</span><br><span class="line">    |  watchdog_ptr = 0x03EBE978</span><br><span class="line">-023|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x0800430F, argc = 0, argv = 0x0)</span><br><span class="line">-024|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>从 callback 能够看出，是在内存分配过程中出现问题，这里编译内存节点时出现异常，使用 mocor_byte_pool_list.cmm 进行检查：</p>
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/10.png" alt="memory"></p>
+<p>根据内存分配器的规则查找，从 0x027DD46C 寻找下一个内存节点时出现问题，这里的内存被 0x21242124覆盖。</p>
+<p>根据对应 assert 文件中的信息，ctrlmenu.c 分配的内存从0x027DC2BC 到 0x027DD46C，但是 0x027DD46C 开始的位置被覆盖了。</p>
+<p>根据log记录，这段内存在死机前先是分配给了jpeg decode使用，通过代码逻辑我们可以看到 APP 发起的 Destroy 立刻返回并释放了内存，并没有等待 Set Event 的动作(解码 IMG_DEC 结束)。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">2265207-4     37131 [MMIPIC]:HandlePicListWinMsg msg_id =f023</span><br><span class="line">2265207-5     37131 [IMG_DEC_Destroy +] handle = 0x85a0fd17</span><br><span class="line">2265207-6     37131 _IMG_DEC_Get_Caller_Priority: T_P_APP, queue_name: Q_P_APP, priority: 76 </span><br><span class="line">2265207-7     37131 _IMG_DEC_Get_Caller_Priority: T_IMG_DEC, queue_name: T_IMG_DEC_QUEUE, priority: 76 </span><br><span class="line">2265207-8     37131 _IMG_DEC_SendMsg: sig_code = 2</span><br><span class="line">2265207-9     37131 [IMG_DEC_Destroy -] handle = 0x85a0fd17</span><br><span class="line">2265207-10    37131 GUIANIM_DestroyHandle:destroy handle=0x85a0fd17 result is 0!</span><br><span class="line"></span><br><span class="line">  (byte_heap_hdr_struct)0x27dc2c4 = (</span><br><span class="line">    pre = 0x03D47820,</span><br><span class="line">    succ = 0x00C6E1FC,</span><br><span class="line">    file_name = 0x08DB3DB4 -&gt; &quot;ctrlmenu.c&quot;,</span><br><span class="line">    line = 861,</span><br><span class="line">    size = 4493,</span><br><span class="line">    block_num = 572061)</span><br><span class="line"></span><br><span class="line"> &gt; </span><br><span class="line">	 0x27dc2bc    0x27dd46c      0x11b0      ALLOC        ctrlmenu.c(861)</span><br><span class="line"> &gt; </span><br><span class="line">	 0x27dd46c    0x21242124     0x1ea64cb8  ALLOC        (556015908)</span><br><span class="line"> &gt;</span><br></pre></td></tr></table></figure>
+
+<p>GUIANIM_DestroyHandle 没有等待 decode 执行JPEGDEC_DestoryHandle 停止底层解码的动作，提前释放内存，导致当前 decode 的动作继续使用了之前的内存，如下，通过 T_IMG_DEC task 的信息也可以看出来，target_ptr_=_0x027DC300 依然存在。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line">-000|tx_thread_suspend(</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">-001|tx_semaphore_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_ptr = 0x01E16F50</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-002|txe_semaphore_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-003|SCI_GetSemaphore(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  _sem_ptr = 0x03EBC074</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-004|FreeLock()</span><br><span class="line">    |  sem_count = 0</span><br><span class="line">    |  susp_count = 0</span><br><span class="line">    |  semap_ptr = 0x03EBC074</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-005|JPEGDEC_DestoryHandle(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    exit_type = IMG_DEC_EXIT_HALT)</span><br><span class="line">    |  dec_info_ptr = 0x03F79100 -&gt; (</span><br><span class="line">    |    src_info = (src_ptr = 0x0, src_file_size = 14576, src_file_handle = 150</span><br><span class="line">    |    frame_in_param = (</span><br><span class="line">    |      handle = 66556160,</span><br><span class="line">    |      target_ptr = 0x027DC300,</span><br><span class="line">    |      target_buf_size = 11552,</span><br><span class="line">    |      target_width = 76,</span><br><span class="line">    |      target_height = 76,</span><br><span class="line">    |      img_rect = (left = 0, top = 40, right = 239, bottom = 279),</span><br><span class="line">    |      target_rect = (left = 0, top = 0, right = 75, bottom = 75),</span><br><span class="line">    |      data_format = IMG_DEC_RGB565,</span><br><span class="line">    |      frame_index = 0,</span><br><span class="line">    |      is_dec_thumbnail = 0,</span><br><span class="line">    |      is_exist_background = 0,</span><br><span class="line">    |      padding1 = 0,</span><br><span class="line">    |      padding2 = 0,</span><br><span class="line">    |      alpha_buf_ptr = 0x0,</span><br><span class="line">    |      alpha_buf_size = 0,</span><br><span class="line">    |      write_data = 0x0,</span><br><span class="line">    |      callback = 0x003AE0CB,</span><br><span class="line">    |      app_param_ptr = 38240904,</span><br><span class="line">    |      app_param_size = 12,</span><br><span class="line">    |      quality = JINF_QUALITY_HIGH,</span><br><span class="line">    |      target_buf_width = 0,</span><br><span class="line">    |      target_buf_height = 0,</span><br><span class="line">    |      img_dec_mode = IMG_DEC_TARGET_SIZE_RESIZABLE),</span><br><span class="line">    |    frame_out_param = (is_decode_finished = 0, is_process_alpha = 0, paddin</span><br><span class="line">    |    frame_extra_info = (priority = 77),</span><br><span class="line">    |    dec_buf_ptr = 0x03D4783C,</span><br><span class="line">    |    read_buf_ptr = 0x0,</span><br><span class="line">    |    ret_val = IMG_DEC_RET_SUCCESS,</span><br><span class="line">    |    jpeg_type = JINF_JPEG_TYPE_BASELINE)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-006|IMG_DEC_Destroy_Hal(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    handle = 66556160,</span><br><span class="line">    |    exit_type = IMG_DEC_EXIT_HALT)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-007|IMG_DEC_Remove_Command(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  ret = IMG_DEC_RET_SUCCESS</span><br><span class="line">    |  dec_handle_ptr = 0x03FE0EA0</span><br><span class="line">    |  tmp_cmd_ptr = 0x03EBBFCC</span><br><span class="line">    |  cur_cmd_ptr = 0x03ED1368</span><br><span class="line">    |  next_cmd_ptr = 0x0</span><br><span class="line">    |  pre_cmd_ptr = 0x03EBBFCC</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-008|IMG_DEC_Task_Routine(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  command = 2</span><br><span class="line">    |  param0 = 2241920279</span><br><span class="line">    |  param2 = 0</span><br><span class="line">    |  sig_ptr = 0x03EC8D34</span><br><span class="line">    |  handle = 2241920279</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-009|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x003AE7A9, argc = 0, argv = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-010|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>通过研究代码发现此问题的原因如下：</p>
+<p>buffer target_ptr 的申请与释放是由应用层所做的，当应用层调用了函数 IMG_DEC_Remove_Handle 后，只是停止发送解码消息的进程，实际解码工作仍在进行，当解码完成后，会调用函数 JPEG_OutputData 将解码后的数据写入 target_ptr 所指内存，但上层应用此时已经释放了此内存，导致非法内存访问。需要修改代码流程，在调用 JPEG_OutputData 函数前，判断该图片是否被强制结束解码，如果是则不调用，否则则调用，从而将解码后的数据传递给上层应用。</p>
+<p>另外发现 JVM callback 在图片解码 task 中调用导致 envent 状态错乱，导致 APP 发起的 Destroy 立刻返回并释放了内存。</p>
+<h2 id="死锁问题"><a href="#死锁问题" class="headerlink" title="死锁问题"></a>死锁问题</h2><p>死锁问题一般是因为互斥量的使用不当引发的问题，可能会导致界面不响应或看门狗复位等问题。</p>
+<p>以看门狗复位为例，ass 文件有以下信息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">File:  watchdog.c</span><br><span class="line">Line:  353</span><br><span class="line">PASSERT(SCI_FALSE)</span><br><span class="line"> &gt; Task APP timeout</span><br></pre></td></tr></table></figure>
+
+<p>对应 callback 如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line">-000|TXAS_SaveMainReg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    cur_lr = 0x0108D180,</span><br><span class="line">    |    cur_pc = 0x80)</span><br><span class="line">-001|TXAS_SystemAssert(</span><br><span class="line">    |    exp = 0x003ACD84 -&gt; ,</span><br><span class="line">    |    file = 0x003ACD78 -&gt; ,</span><br><span class="line">    |    line = 353,</span><br><span class="line">    |    assert_info_ptr = 0x00C36215 -&gt; &quot;Task APP timeout&quot;)</span><br><span class="line">    |  assert_mode = 1</span><br><span class="line">    |  cur_sp = 31244224</span><br><span class="line">    |  cur_lr = 3791281</span><br><span class="line">    |  cur_pc = 8534840</span><br><span class="line">    |  i = 12387240</span><br><span class="line">-002|SCI_PAssert(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|CheckAllTask()</span><br><span class="line">    |  list = 0x03EBEB2C</span><br><span class="line">    |  curr_tick = 3562772</span><br><span class="line">-004|DoIdle_DoCallback(</span><br><span class="line">    |    param = 5000)</span><br><span class="line">    |  i = 2</span><br><span class="line">-005|DoIdle_Callback(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  assert_mode = 44</span><br><span class="line">    |  dischg = (warning_vol = 64244, shutdown_vol = 1011, deadline_vol = 65369,</span><br><span class="line">-006|osa_timer_routine_wraper(</span><br><span class="line">    |    usr_timer_id = 0x03F3FAF4)</span><br><span class="line">-007|tx_timer_thread_entry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  timeout_function_backup = 0x003BFF59</span><br><span class="line">    |  expired_timers = 0x03F3FAFC</span><br><span class="line">    |  timeout_function = 0x003BFF59</span><br><span class="line">-008|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>提示死机原因是 <code>Task APP timeout</code> ，那么分析代码是在 mmimain.c 中，函数 <code>void APP_Task(uint32 argc, void *argv)</code> 注册的看门狗没有及时喂狗。</p>
+<p><code>watchdog_ptr = SWDG_RegTask(&quot;APP&quot;, 180000)</code></p>
+<p>分析 APP_Task callback 如下，这里在获取 img_decoder_event 时被挂起。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line">-000|tx_thread_suspend(?)</span><br><span class="line">    |</span><br><span class="line">-001|tx_event_flags_get(?, ?, ?, ?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-002|txe_event_flags_get(?, ?, get_option = 1, ?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-003|SCI_GetEvent(?, ?, get_option = 1, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-004|IMG_DEC_GetEvent(requested_flags = 4, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-005|IMG_DEC_Remove_Handle(?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-006|IMG_DEC_Destroy(handle = 2241919696)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-007|GUIANIM_DestroyHandle(?, img_handle = 2241919696, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-008|HandleAnimLoseFocus(anim_ctrl_ptr = 0x03FDAFD8)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-009|AnimCtrlHandleMsg(?, ?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-010|VTLCTRL_HandleMsg(iguictrl_ptr = 0x03FDAFD8, msg_id = 61492, param_ptr = 0x</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-011|MMK_RunCtrlProc(?, msg_id = 61492, param = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-012|ControlTreeNodeHandleEvent(?, ?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-013|MMK_DispatchToAllTreeNode(?, func = 0x09076FEF, msg_id = 61492, param = 0x0</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-014|MMK_DispatchToAllControl(?, msg_id = 61492, param = 0x0, state = 2)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-015|MMK_ProcSpecialWinMsg(win_handle = 89194548, ?, param = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-016|MMK_DispatchToHandle(handle = 89194548, msg_id = 61475, param_ptr = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-017|MMK_SendMsg(?, msg_id = 61475, param_ptr = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-018|MMK_OpenWin(win_handle = 90570798, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-019|AppletCreateWindow(?, is_win_table = 1)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-020|MMK_CreateWinTable(create_ptr = 0x02477A24)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-021|MMK_CreateWin(win_table_ptr = 0x082A4600, add_data_ptr = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-022|HandlePicListWinMsg(?, ?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-023|MMK_RunWinProc(?, msg_id = 57345, param = 0x03E9BC88)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-024|MMK_DispatchToHandle(handle = 89194548, msg_id = 57345, param_ptr = 0x03E9B</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-025|MMK_DispatchWinMSG(mmi_msg_ptr = 0x03FA06C0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-026|MMK_DispatchMSGQueue(?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-027|thread_entry_P_APP(?, ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-028|ThreadEntry(?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-029|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>而 img_decoder_event 应该在 T_IMG_DEC Task 中被释放，但是这个 Task 被信号量 JPEG_FREE_RES_SEMAP 挂起，参考下面的 callback：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br></pre></td><td class="code"><pre><span class="line">-000|tx_thread_suspend(</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">-001|tx_semaphore_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_ptr = 0x01E15D10 -&gt; (</span><br><span class="line">    |    tx_thread_id = 1414025796,</span><br><span class="line">    |    tx_run_count = 265,</span><br><span class="line">    |    tx_stack_ptr = 0x026A7F38,</span><br><span class="line">    |    tx_stack_start = 0x026A70F4,</span><br><span class="line">    |    tx_stack_end = 0x026A80EF,</span><br><span class="line">    |    tx_stack_size = 4092,</span><br><span class="line">    |    tx_time_slice = 0,</span><br><span class="line">    |    tx_new_time_slice = 0,</span><br><span class="line">    |    tx_ready_next = 0x01E15D10,</span><br><span class="line">    |    tx_ready_previous = 0x01E15D10,</span><br><span class="line">    |    tx_thread_name = 0x003AD978 -&gt; &quot;T_IMG_DEC&quot;,</span><br><span class="line">    |    tx_priority = 76,</span><br><span class="line">    |    tx_state = 6,</span><br><span class="line">    |    tx_delayed_suspend = 0,</span><br><span class="line">    |    tx_suspending = 0,</span><br><span class="line">    |    tx_preempt_threshold = 76,</span><br><span class="line">    |    tx_priority_bit = (0, 0, 4096, 0, 0, 0, 0, 0),</span><br><span class="line">    |    tx_thread_entry = 0x003B234F,</span><br><span class="line">    |    tx_entry_parameter = 65588616,</span><br><span class="line">    |    tx_thread_timer = (tx_remaining_ticks = 4294967295, tx_re_initialize_ti</span><br><span class="line">    |    tx_suspend_cleanup = 0x002162D1,</span><br><span class="line">    |    tx_suspend_control_block = 0x03EBC074,</span><br><span class="line">    |    tx_suspended_next = 0x01E15D10,</span><br><span class="line">    |    tx_suspended_previous = 0x01E15D10,</span><br><span class="line">    |    tx_suspend_info = 1,</span><br><span class="line">    |    tx_additional_suspend_info = 0x026A808C,</span><br><span class="line">    |    tx_suspend_option = 1,</span><br><span class="line">    |    tx_suspend_status = 0,</span><br><span class="line">    |    tx_created_next = 0x01E15E3C,</span><br><span class="line">    |    tx_created_previous = 0x01E146CC,</span><br><span class="line">    |    tx_filex_ptr = 0x0,</span><br><span class="line">    |    time = 0,</span><br><span class="line">    |    tx_thread_stack_highest_ptr = 0x026A7B58)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-002|txe_semaphore_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-003|SCI_GetSemaphore(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  _sem_ptr = 0x03EBC074 -&gt; (</span><br><span class="line">    |    sem_id = (</span><br><span class="line">    |      tx_semaphore_id = 1397050689,</span><br><span class="line">    |      tx_semaphore_name = 0x003DDCB4 -&gt; &quot;JPEG_FREE_RES_SEMAP&quot;,</span><br><span class="line">    |      tx_semaphore_count = 0,</span><br><span class="line">    |      tx_semaphore_suspension_list = 0x01E15D10,</span><br><span class="line">    |      tx_semaphore_suspended_count = 1,</span><br><span class="line">    |      tx_semaphore_created_next = 0x03EBC218,</span><br><span class="line">    |      tx_semaphore_created_previous = 0x03EBC020),</span><br><span class="line">    |    sem_stat = 0x03E8CE48)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-004|FreeLock()</span><br><span class="line">    |  sem_count = 0</span><br><span class="line">    |  susp_count = 0</span><br><span class="line">    |  semap_ptr = 0x03EBC074</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-005|IMGJPEG_FreeRes()</span><br><span class="line">    |  pContext = 0x01250CDC</span><br><span class="line">    |  ret_value = 255</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-006|JPEGDEC_DestoryHandle(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    exit_type = IMG_DEC_EXIT_HALT)</span><br><span class="line">    |  dec_info_ptr = 0x03F75488</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-007|IMG_DEC_Destroy_Hal(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    handle = 66540680,</span><br><span class="line">    |    exit_type = IMG_DEC_EXIT_HALT)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-008|IMG_DEC_Remove_Command(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  ret = IMG_DEC_RET_SUCCESS</span><br><span class="line">    |  dec_handle_ptr = 0x03FDD4E0</span><br><span class="line">    |  tmp_cmd_ptr = 0x03EBBFCC</span><br><span class="line">    |  cur_cmd_ptr = 0x03EC0700</span><br><span class="line">    |  next_cmd_ptr = 0x0</span><br><span class="line">    |  pre_cmd_ptr = 0x03EBBFCC</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-009|IMG_DEC_Task_Routine(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  command = 2</span><br><span class="line">    |  param0 = 2241919696</span><br><span class="line">    |  param2 = 0</span><br><span class="line">    |  sig_ptr = 0x03EC0604</span><br><span class="line">    |  handle = 2241919696</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-010|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x003AD589, argc = 0, argv = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-011|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>通过 ass 文件，也能够看出 T_IMG_DEC Task 被 JPEG_FREE_RES_SEMAP 挂起。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&gt; JPEG_FREE_RES_SEMAP                    0          </span><br><span class="line"> &gt; Suspend Task_Name :  T_IMG_DEC</span><br></pre></td></tr></table></figure>
+
+<p>根据这些 callback 继续分析代码，得到如下的结论：<br>应用窗体在丢失焦点时会发消息让 T_IMG_DEC 执行销毁流程，而 T_IMG_DEC拿到锁执行 JPEGDEC_DestroyHandle 销毁流程，这个执行过程中会释放 JPEG_FREE_RES_SEMAP；此时 T_JPEG_DECODER 从挂起状态解除，但是因为在 JPEGDEC_DestroyHandle 前面被销毁了，导致不能执行。两个 task 都不能执行，所以导致 timeout。 </p>
+<h2 id="Task-Queue-Full问题"><a href="#Task-Queue-Full问题" class="headerlink" title="Task Queue Full问题"></a>Task Queue Full问题</h2><p>消息队列满现象为Assert提示：ASSERT: Error 0xb (The queue was full !)，直接原因为接收消息的Task得不到执行，导致消息队列满，而在发送消息的任务检测到无法发送消息，直接报告消息队列满错误。</p>
+<p>可能原因如下：<br>1.Task优先级太低，一直无法得到执行。<br>2.Task因为某些原因（比如死锁或信号量等）无法处理消息，可以分析代码逻辑。<br>3.中断处理太多，导致Task得不到执行，可以通过通过TaskAnalyzer工具分析中断原因。<br>4.关中断时间太长，导致Task得不到执行，尽量减少关中断的时间。<br>5.消息队列长度设置不正确，可以增加Queue Size。</p>
+<p>此问题分析关键：首先找到无法处理消息的Task，而后逐条分析，包括当前Task队列的消息检查，也可以在Assert窗口输入命令“6”，输出Task的各项信息，寻找可用Queue数目为0的Task，这个Task就是问题点。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br></pre></td><td class="code"><pre><span class="line">-000|TXAS_SaveMainReg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    cur_lr = 0x0108D1CE,</span><br><span class="line">    |    cur_pc = 0x80 -&gt; 0)</span><br><span class="line">-001|TXAS_SystemAssert(</span><br><span class="line">    |    exp = 0x023482FC -&gt; ,</span><br><span class="line">    |    file = 0x00377A80 -&gt; ,</span><br><span class="line">    |    line = 810,</span><br><span class="line">    |    assert_info_ptr = 0x0 -&gt; NULL)</span><br><span class="line">    |  assert_mode = 1</span><br><span class="line">    |  cur_sp = 36994960</span><br><span class="line">    |  cur_lr = 3666785</span><br><span class="line">    |  cur_pc = 7830016</span><br><span class="line">    |  i = 11666952</span><br><span class="line">    |  tem_str = &quot;RTOS/source/src_osa/c/threadx_os.c&quot;</span><br><span class="line">-002|SCI_Assert(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|SCI_SendSignal(</span><br><span class="line">    |    signal_ptr = 0x03EB67C8,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  status = 11</span><br><span class="line">-004|MMISRV_CAMERAROLL_Download_Thumbnail()</span><br><span class="line">    |  sig_ptr = 0x03EB67C8 -&gt; (</span><br><span class="line">    |    sig = (SignalCode = 1, SignalSize = 20, Pre = 0x0, Suc = 0x0, Sender = 21),</span><br><span class="line">    |    data_ptr = 0x0)</span><br><span class="line">-005|HandlePicListWinMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  result = 1</span><br><span class="line">    |  title_str = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">    |  query_win_id = 2359321</span><br><span class="line">    |  mark_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_str = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0</span><br><span class="line">    |  data_info = (is_bitmap = 76, is_free_bitmap = 12, is_save_data = 185, data_ptr = 0xF</span><br><span class="line">-006|MMK_RunWinProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 53255,</span><br><span class="line">    |    param = 0x026B9D14)</span><br><span class="line">-007|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 62717996,</span><br><span class="line">    |    msg_id = 53255,</span><br><span class="line">    |    param_ptr = 0x026B9D14)</span><br><span class="line">    |  openwin_handle_result = 0</span><br><span class="line">    |  old_handle = 16711680</span><br><span class="line">-008|MMK_SendMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 53255,</span><br><span class="line">    |    param_ptr = 0x026B9D14)</span><br><span class="line">    |  result = 0</span><br><span class="line">-009|MMIAPIPICVIEW_HandleCameraRollSig(</span><br><span class="line">    |    msg_id = 53255,</span><br><span class="line">    |    param = 0x026B9D14)</span><br><span class="line">-010|HandlePsAndRefMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 53255,</span><br><span class="line">    |    param = 0x026B9D14)</span><br><span class="line">    |  result = 1</span><br><span class="line">-011|DispatchSysSig(</span><br><span class="line">    |    signal_ptr = 0x026B9D14)</span><br><span class="line">    |  i = 131</span><br><span class="line">    |  regapp_num = 245</span><br><span class="line">-012|MMK_DispatchExtSig(</span><br><span class="line">    |  ?)</span><br><span class="line">-013|thread_entry_P_APP(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  receiveSignal = 0x026B9D14</span><br><span class="line">    |  mmi_msg = 0x03FA1410</span><br><span class="line">    |  ticks1 = 0</span><br><span class="line">    |  ticks2 = 0</span><br><span class="line">    |  is_log_on = 0</span><br><span class="line">    |  time_period = 4294967295</span><br><span class="line">    |  watchdog_ptr = 0x03EBE534</span><br><span class="line">-014|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x08EFC94B, argc = 0, argv = 0x0)</span><br><span class="line">-015|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>结合代码能够看到，函数 <code>MMISRV_CAMERAROLL_Download_Thumbnail()</code> 发送消息给 T_P_APP_CAMERAROLL_TASK 时，发现该Task消息队列满。</p>
+<p>查看ASS文件，发现 T_P_APP_CAMERAROLL_TASK 消息队列确实已满：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Task_ID Name Tcb_Addr Current_PC  Queue_All Queue_Avail </span><br><span class="line">0xaf T_P_APP_CAMERAR 0x01ceaf800 x002127d0 20 0     </span><br><span class="line">TX_READY 206</span><br></pre></td></tr></table></figure>
+
+<p>查看T_P_APP_CAMERAROLL_TASK callback，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">-000|tx_thread_suspend(</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">-001|tx_queue_receive(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_ptr = 0x01CEAF88</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-002|txe_queue_receive(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-003|SCI_GetSignal(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  item = 66974816</span><br><span class="line">    |  thread_block = 0x01CEAF80</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-004|CAMERAROLL_Task(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-005|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x08074DD5, argc = 0, argv = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line">-006|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>通过TaskAnalyzer内存打点信息可以看出，T_P_APP以及网络相关高优先级的Task被频繁调度，导致低优先级的 T_P_APP_CAMERAROLL_TASK 得不到调度，通过分析T_P_APP_CAMERAROLL_TASK 消息类型，发现是T_P_APP一直在重复频繁发送如下三个消息：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">0xAD14:HTTP_SIG_GET_CNF</span><br><span class="line">0XAD18:HTTP_SIG_HEADER_IND</span><br><span class="line">0xAD1A:HTTP_SIG_DATA_IND</span><br></pre></td></tr></table></figure>
+
+<p><img src="//tinylaker.github.io/2019/11/14/sc770x-稳定性问题分析/11.png" alt="queue"></p>
+<p>分析代码问题原因：CAMERAROLL_TASK 并发使用了12个Http，但是对应的Queue只有20个，并不能支持场景使用。最优解是增加Queue个数，同时降低Http并发个数。</p>
+<h2 id="栈溢出问题"><a href="#栈溢出问题" class="headerlink" title="栈溢出问题"></a>栈溢出问题</h2><p>栈溢出的可能原因如下：<br>1.栈空间分配太小，不足以满足大量局部变量的使用场景，应尽量使用堆区动态内存。<br>2.函数调用层次过多，或者陷入递归死循环当中。<br>3.栈空间内存异常，可能发生内存覆盖导致栈空间数据异常。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">-000|TXAS_SaveMainReg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    cur_lr = 0x0108D1CE,</span><br><span class="line">    |    cur_pc = 0x80)</span><br><span class="line">-001|TXAS_SystemAssert(</span><br><span class="line">    |    exp = 0x0021873C,</span><br><span class="line">    |    file = 0x00218710,</span><br><span class="line">    |    line = 763,</span><br><span class="line">    |    assert_info_ptr = 0x00C35F3D -&gt; &quot;Stack Overflow,thread:0x1e00dd8,sp overflow addr:0x2459928,thread ID:0x15,Tx Name:T_P_APP&quot;)</span><br><span class="line">    |  assert_mode = 1</span><br><span class="line">    |  cur_sp = 66875528</span><br><span class="line">    |  cur_lr = 3778945</span><br><span class="line">    |  cur_pc = 8533360</span><br><span class="line">    |  i = 12387240</span><br><span class="line">-002|SCI_PAssert(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-003|prod_thread_stack_overflow_handle(</span><br><span class="line">    |  ?)</span><br><span class="line">-004|tx_thread_stack_error_handler(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  interrupt_save = 128</span><br><span class="line">-005|tx_thread_suspend(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  interrupt_save = 536870912</span><br><span class="line">-006|tx_event_flags_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_ptr = 0x01E07050</span><br><span class="line">-007|txe_event_flags_get(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |    get_option = 1,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">-008|SCI_GetEvent(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?,</span><br><span class="line">    |    get_option = 1,</span><br><span class="line">    |  ?)</span><br><span class="line">-009|mta_ex_trace_task(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  actual_flag = 2</span><br><span class="line">    |  request_flag = 2</span><br><span class="line">-010|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x003C76EB, argc = 0, argv = 0x0)</span><br><span class="line">-011|tx_thread_shell_entry()</span><br><span class="line"> ---|end of frame</span><br></pre></td></tr></table></figure>
+
+<p>根据上面callback的提示信息，T_P_APP Task存在栈溢出，<code>tx_stack_ptr = 0x2459928</code> 超出了进程的栈帧起始地址 <code>tx_stack_start_=_0x02462728</code> 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">  (TX_THREAD*)0x1E00DE0 = 0x01E00DE0 -&gt; (</span><br><span class="line">    tx_thread_id = 1414025796,</span><br><span class="line">    tx_run_count = 3138736,</span><br><span class="line">    tx_stack_ptr = 0x02459928,</span><br><span class="line">    tx_stack_start_=_0x02462728,</span><br><span class="line">    tx_stack_end = 0x02469F23,</span><br><span class="line">    tx_stack_size = 30716,</span><br><span class="line">    tx_time_slice = 0,</span><br><span class="line">    tx_new_time_slice = 0,</span><br><span class="line">    tx_ready_next = 0x01E00DE0,</span><br><span class="line">    tx_ready_previous = 0x01E00DE0,</span><br><span class="line">    tx_thread_name = 0x00202A60 -&gt; &quot;T_P_APP&quot;,</span><br><span class="line">    tx_priority = 76,</span><br><span class="line">    tx_state = 0,</span><br><span class="line">    tx_delayed_suspend = 0,</span><br><span class="line">    tx_suspending = 0,</span><br><span class="line">    tx_preempt_threshold = 76,</span><br><span class="line">    tx_priority_bit = (0, 0, 4096, 0, 0, 0, 0, 0),</span><br><span class="line">    tx_thread_entry = 0x003B1FF7,</span><br><span class="line">    tx_entry_parameter = 65597768,</span><br><span class="line">    tx_thread_timer = (tx_remaining_ticks = 0, tx_re_initialize_ticks = 0, tx_ti</span><br><span class="line">    tx_suspend_cleanup = 0x0,</span><br><span class="line">    tx_suspend_control_block = 0x01E00ED4,</span><br><span class="line">    tx_suspended_next = 0x01E00DE0,</span><br><span class="line">    tx_suspended_previous = 0x01E00DE0,</span><br><span class="line">    tx_suspend_info = 4,</span><br><span class="line">    tx_additional_suspend_info = 0x02469570,</span><br><span class="line">    tx_suspend_option = 1,</span><br><span class="line">    tx_suspend_status = 0,</span><br><span class="line">    tx_created_next = 0x01E01290,</span><br><span class="line">    tx_created_previous = 0x01DFFFD0,</span><br><span class="line">    tx_filex_ptr = 0x0,</span><br><span class="line">    time = 0,</span><br><span class="line">tx_thread_stack_highest_ptr = 0x02459928)</span><br></pre></td></tr></table></figure>
+
+<p>手动推导T_P_APP Task callback发现，存在000～003死循环导致栈溢出。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br></pre></td><td class="code"><pre><span class="line">-000|HandlePicListWinMsg(</span><br><span class="line">    |    win_id = 2359300,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param = 0xFA04)</span><br><span class="line">    |  title_str = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">    |  query_win_id = 2359321</span><br><span class="line">    |  mark_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_str = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |</span><br><span class="line">-001|MMK_RunWinProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-002|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 3217293358,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param_ptr = 0x0)</span><br><span class="line">    |  openwin_handle_result = 0</span><br><span class="line">    |  old_handle = 3217293358</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-003|MMK_SendMsg(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param_ptr = 0x0)</span><br><span class="line">    |  result = 0</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-004|HandlePicListWinMsg(</span><br><span class="line">    |    win_id = 2359300,</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  result = 1</span><br><span class="line">    |  title_str = (wstr_ptr = 0x0, wstr_len = 0)</span><br><span class="line">    |  query_win_id = 2359321</span><br><span class="line">    |  mark_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_str = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  mark_num_wstr = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,</span><br><span class="line">    |  data_info = (is_bitmap = 0, is_free_bitmap = 0, is_save_data = 0, data_pt</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-005|MMK_RunWinProc(</span><br><span class="line">    |  ?,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param = 0x02469E64)</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-006|MMK_DispatchToHandle(</span><br><span class="line">    |    handle = 3217293358,</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param_ptr = 0x02469E64)</span><br><span class="line">    |  openwin_handle_result = 0</span><br><span class="line">    |  old_handle = 16711680</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-007|MMK_DispMsgToFocusWin(</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |    param_ptr = 0x02469E64)</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-008|MMK_DispMsgToWin(</span><br><span class="line">    |    msg_id = 64004,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  result = 0</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-009|HandleMSGKbd(</span><br><span class="line">    |    keys_status = 64000,</span><br><span class="line">    |    key_code = 4)</span><br><span class="line">    |  multi_key_tp_param = (is_slide = 0, pre_tp_point = (x = 0, y = 0), cur_tp</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-010|MMK_DispatchMSGKbd(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  keypress_ptr = 0x03EAE9C8</span><br><span class="line">    |  key_code = 4</span><br><span class="line">    |  is_long_press = 0</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-011|MMK_DispatchExtSig(</span><br><span class="line">    |  ?)</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-012|thread_entry_P_APP(</span><br><span class="line">    |  ?,</span><br><span class="line">    |  ?)</span><br><span class="line">    |  receiveSignal = 0x03EAE9C8</span><br><span class="line">    |  mmi_msg = 0x03FA0650</span><br><span class="line">    |  ticks1 = 0</span><br><span class="line">    |  ticks2 = 0</span><br><span class="line">    |  is_log_on = 0</span><br><span class="line">    |  time_period = 4294967295</span><br><span class="line">    |  watchdog_ptr = 0x03EBE978</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-013|ThreadEntry(</span><br><span class="line">    |  ?)</span><br><span class="line">    |  thread_entry = (entry = 0x08004393, argc = 0, argv = 0x0)</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line">-014|tx_thread_shell_entry()</span><br><span class="line">    |</span><br><span class="line">    |                                                                           </span><br><span class="line"> ---|end of frame</span><br><span class="line">    |</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过MTBF和Monkey测试会暴露出各种问题，需要借助于丰富的调试方法进行分析定位。</p>
+<p>1.MTBF测试明确了平均故障间隔时间，可以反映出产品的时间质量。<br>2.Monkey压力测试，保证产品的软硬件稳定性。<br>3.EUT Release版本测试，此时大部分问题已经收敛，该阶段问题不易复现，可能安排各种专项测试。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/stability/" rel="tag"># stability</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/11/11/Android-GUI框架简介/" rel="next" title="Android GUI框架简介">
+                  <i class="fa fa-chevron-left"></i> Android GUI框架简介
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/11/27/Android智能指针/" rel="prev" title="Android智能指针">
+                  Android智能指针 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#工具的使用"><span class="nav-number">1.</span> <span class="nav-text">工具的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题分析"><span class="nav-number">2.</span> <span class="nav-text">问题分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#内存泄漏"><span class="nav-number">2.1.</span> <span class="nav-text">内存泄漏</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存越界"><span class="nav-number">2.2.</span> <span class="nav-text">内存越界</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#block-pool"><span class="nav-number">2.2.1.</span> <span class="nav-text">block pool</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#byte-pool"><span class="nav-number">2.2.2.</span> <span class="nav-text">byte pool</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存覆盖"><span class="nav-number">2.3.</span> <span class="nav-text">内存覆盖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#死锁问题"><span class="nav-number">2.4.</span> <span class="nav-text">死锁问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Task-Queue-Full问题"><span class="nav-number">2.5.</span> <span class="nav-text">Task Queue Full问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#栈溢出问题"><span class="nav-number">2.6.</span> <span class="nav-text">栈溢出问题</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">tinylaker</p>
+  <div class="site-description" itemprop="description">个人学习总结</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/tinylaker" title="GitHub &rarr; https://github.com/tinylaker" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:xyxujinlong@163.com" title="E-Mail &rarr; mailto:xyxujinlong@163.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tinylaker</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>
