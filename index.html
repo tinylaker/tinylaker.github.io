@@ -239,6 +239,271 @@
   
   
   <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/06/gtest测试框架使用/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/12/06/gtest测试框架使用/" class="post-title-link" itemprop="url">gtest测试框架使用</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-06 20:44:52 / 修改时间：22:26:43" itemprop="dateCreated datePublished" datetime="2019-12-06T20:44:52+08:00">2019-12-06</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/tools/" itemprop="url" rel="index"><span itemprop="name">tools</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在实际项目开发过程中，需要进行必要的单元测试，以保证代码开发阶段的功能性。这里简单介绍下 google 跨平台的c++单元测试框架 gtest。</p>
+<h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>gtest 编译需要 cmake 支持，安装步骤如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ git clone https://github.com/google/googletest.git</span><br><span class="line">$ cd googletest/</span><br><span class="line">$ mkdir build</span><br><span class="line">$ cd build/</span><br><span class="line">$ cmake ..</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
+
+<h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>gtest 提供了TEST()宏，用来定义测试函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TEST(test_suite_name, test_case_name) </span><br><span class="line">&#123;</span><br><span class="line">    // test body ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在测试函数中，gtest 提供了EXPECT_和ASSERT_两种风格的断言。如果ASSERT_执行失败了，会导致测试函数立即返回；但EXPECT_如果执行失败了，并不会导致测试函数返回。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TEST(MyTest, Add) </span><br><span class="line">&#123;</span><br><span class="line">    EXPECT_EQ(1 + 1, 2);</span><br><span class="line">    ASSERT_EQ(1 + 1, 2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>编写简单的测试用例</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">#include &lt;gtest/gtest.h&gt;</span><br><span class="line"></span><br><span class="line">int add(int a, int b) &#123;</span><br><span class="line">    return a + b;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">TEST(Demo, add) &#123;</span><br><span class="line">    EXPECT_EQ(add(1, 2), 3);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">int main(int argc, char **argv) &#123;</span><br><span class="line">    testing::InitGoogleTest(&amp;argc, argv);</span><br><span class="line"></span><br><span class="line">    return RUN_ALL_TESTS();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>CMakeLists.txt</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">cmake_minimum_required (VERSION 3.2)</span><br><span class="line"></span><br><span class="line">project(mytest)</span><br><span class="line"></span><br><span class="line">set(CMAKE_CXX_FLAGS &quot;$&#123;CMAKE_CXX_FLAGS&#125; -g -std=c++11 -Wall&quot;)</span><br><span class="line"></span><br><span class="line">find_package(GTest REQUIRED)</span><br><span class="line">find_package(Threads REQUIRED)</span><br><span class="line"></span><br><span class="line">include_directories($&#123;GTEST_INCLUDE_DIRS&#125;)</span><br><span class="line"></span><br><span class="line">add_executable(mytest test.cpp)</span><br><span class="line">target_link_libraries(mytest $&#123;GTEST_BOTH_LIBRARIES&#125;)</span><br><span class="line">target_link_libraries(mytest $&#123;CMAKE_THREAD_LIBS_INIT&#125;)</span><br><span class="line"></span><br><span class="line">add_test(Test mytest)</span><br><span class="line">enable_testing()</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>执行测试用例</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">$ make test</span><br><span class="line">Running tests...</span><br><span class="line">Test project /work/temp/gtest-demo/build</span><br><span class="line">    Start 1: Test</span><br><span class="line">1/1 Test #1: Test .............................   Passed    0.00 sec</span><br><span class="line"></span><br><span class="line">100% tests passed, 0 tests failed out of 1</span><br><span class="line"></span><br><span class="line">Total Test time (real) =   0.00 sec</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>samples</p>
+</li>
+</ul>
+<p>gtest 的源码中包含很多测试 samples，并且在 docs 中有简短的说明，以 sample1 为例，实现了阶乘和质数的方法。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">// Returns n! (the factorial of n).  For negative n, n! is defined to be 1.</span><br><span class="line">int Factorial(int n) &#123;</span><br><span class="line">  int result = 1;</span><br><span class="line">  for (int i = 1; i &lt;= n; i++) &#123;</span><br><span class="line">    result *= i;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对应阶乘方法的单元测试用例如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">// Tests factorial of negative numbers.</span><br><span class="line">TEST(FactorialTest, Negative) &#123;</span><br><span class="line">  EXPECT_EQ(1, Factorial(-5));</span><br><span class="line">  EXPECT_EQ(1, Factorial(-1));</span><br><span class="line">  EXPECT_GT(Factorial(-10), 0);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Tests factorial of 0.</span><br><span class="line">TEST(FactorialTest, Zero) &#123;</span><br><span class="line">  EXPECT_EQ(1, Factorial(0));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// Tests factorial of positive numbers.</span><br><span class="line">TEST(FactorialTest, Positive) &#123;</span><br><span class="line">  EXPECT_EQ(1, Factorial(1));</span><br><span class="line">  EXPECT_EQ(2, Factorial(2));</span><br><span class="line">  EXPECT_EQ(6, Factorial(3));</span><br><span class="line">  EXPECT_EQ(40320, Factorial(8));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译 samples 需要指定编译选项 <code>cmake -Dgtest_build_samples=ON ${GTEST_DIR}</code> </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">$ ./sample1_unittest</span><br><span class="line">Running main() from /work/googletest/googletest/src/gtest_main.cc</span><br><span class="line">[==========] Running 6 tests from 2 test suites.</span><br><span class="line">[----------] Global test environment set-up.</span><br><span class="line">[----------] 3 tests from FactorialTest</span><br><span class="line">[ RUN      ] FactorialTest.Negative</span><br><span class="line">[       OK ] FactorialTest.Negative (0 ms)</span><br><span class="line">[ RUN      ] FactorialTest.Zero</span><br><span class="line">[       OK ] FactorialTest.Zero (0 ms)</span><br><span class="line">[ RUN      ] FactorialTest.Positive</span><br><span class="line">[       OK ] FactorialTest.Positive (0 ms)</span><br><span class="line">[----------] 3 tests from FactorialTest (0 ms total)</span><br><span class="line"></span><br><span class="line">[----------] 3 tests from IsPrimeTest</span><br><span class="line">[ RUN      ] IsPrimeTest.Negative</span><br><span class="line">[       OK ] IsPrimeTest.Negative (0 ms)</span><br><span class="line">[ RUN      ] IsPrimeTest.Trivial</span><br><span class="line">[       OK ] IsPrimeTest.Trivial (0 ms)</span><br><span class="line">[ RUN      ] IsPrimeTest.Positive</span><br><span class="line">[       OK ] IsPrimeTest.Positive (0 ms)</span><br><span class="line">[----------] 3 tests from IsPrimeTest (0 ms total)</span><br><span class="line"></span><br><span class="line">[----------] Global test environment tear-down</span><br><span class="line">[==========] 6 tests from 2 test suites ran. (0 ms total)</span><br><span class="line">[  PASSED  ] 6 tests.</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>利用 gtest 可以快速进行单元测试编写，验证软件开发过程中的问题，是软件开发中不可缺少的环节。</p>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/05/Android图像系统之一/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/12/05/Android图像系统之一/" class="post-title-link" itemprop="url">Android图像系统之一</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-05 12:06:23" itemprop="dateCreated datePublished" datetime="2019-12-05T12:06:23+08:00">2019-12-05</time>
+            </span>
+          
+            
+
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-06 20:44:05" itemprop="dateModified" datetime="2019-12-06T20:44:05+08:00">2019-12-06</time>
+              </span>
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <blockquote>
+<p>基于Android P源码分析，深入理解Android GUI的框架。</p>
+</blockquote>
+<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Android图像系统框架比较复杂，涉及WindowManager、SurfaceFlinger、ActivityManager、InputManager等模块。因为笔者此前从事过底层显示驱动相关工作，期望通过梳理Android显示系统的框架构建完整的知识体系。</p>
+<p>它们之间的关系如下：<br><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/GUI.png" alt="GUI"></p>
+<h1 id="图形框架"><a href="#图形框架" class="headerlink" title="图形框架"></a>图形框架</h1><blockquote>
+<p>参考 <a href="https://source.android.com/devices/graphics" target="_blank" rel="noopener">https://source.android.com/devices/graphics</a></p>
+</blockquote>
+<p>Android框架提供各种 2D 和 3D 图形渲染的 API，应用开发者可以通过 Canvas、OpenGL ES 和 Vulkan 三种方式将图像绘制到屏幕上。但无论开发者使用什么渲染 API，最终都会渲染到 Surface。Surface 表示缓冲队列中的生产者，每个 Window 都对应者一个或多个 Surface，而缓冲队列的消费者通常是 SurfaceFlinger，用以合成到显示部分，比如自身屏幕或者扩展屏幕。</p>
+<p><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/Surface.png" alt="Surface"></p>
+<ul>
+<li><p>IMAGE STREAM PRODUCERS: 可以生成图形缓冲区以供消耗的任何内容，比如OpenGL ES、Canvas 2D 和 mediaserver 视频解码器。</p>
+</li>
+<li><p>IMAGE STREAM CONSUMERS: 最常见的消费者就是 SurfaceFlinger，它是可以修改所显示部分内容的唯一服务，使用 OpenGL 和 Hardware Composer 来合成一组 Surface. 还有其他应用也可以作为消费者，比如相机应用和 ImageReader.</p>
+</li>
+<li><p>Hardware Composer: 作为显示子系统的硬件抽象层，完成SurfaceFlinger 合成显示的部分任务，以分担 OpenGL 和 GPU 的消耗。同时需要支持 Vsync Event 和 HDMI 的热插拔。</p>
+</li>
+<li><p>Gralloc HAL: 用来分配图像生产者所请求的内存。</p>
+</li>
+</ul>
+<h1 id="数据处理"><a href="#数据处理" class="headerlink" title="数据处理"></a>数据处理</h1><p><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/BufferQueue.png" alt="BufferQueue"></p>
+<p>左侧黄色部分为图像缓冲区的生产者，比如状态栏、菜单栏和主界面等。SurfaceFlinger 完成 Surface 的合成，Hardware Composer 操作硬件控制器显示。</p>
+<h2 id="BufferQueue"><a href="#BufferQueue" class="headerlink" title="BufferQueue"></a>BufferQueue</h2><p>BufferQueue 是 Android 图像系统的重要组成部分，是缓冲区和队列结合的数据结构，通过Binder IPC在进程间传递。</p>
+<p><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/BufferQueue2.png" alt="BufferQueue2"></p>
+<p>上图描述了图像生产者和消费者的操作流程：</p>
+<ul>
+<li>生产者请求队列中空闲的缓冲区：dequeueBuffer()</li>
+<li>生产者填充缓冲区并添加到队列：queueBuffer()</li>
+<li>消费者从队列中获取缓冲区：acquireBuffer()</li>
+<li>消费者使用完毕返回给队列：releaseBuffer()</li>
+</ul>
+<p>对应类图的关系如下：<br><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/BufferQueue3.png" alt="BufferQueue3"></p>
+<h1 id="SurfaceFlinger"><a href="#SurfaceFlinger" class="headerlink" title="SurfaceFlinger"></a>SurfaceFlinger</h1><p>SurfaceFlinger 是一个本地系统服务，用来合成应用绘制的 Surface，借助 Hardware Composer 显示到屏幕上。</p>
+<p>[surfaceflinger.rc]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">service surfaceflinger /system/bin/surfaceflinger</span><br><span class="line">    class core animation</span><br><span class="line">    user system</span><br><span class="line">    group graphics drmrpc readproc</span><br><span class="line">    onrestart restart zygote</span><br><span class="line">    writepid /dev/stune/foreground/tasks</span><br><span class="line">    socket pdx/system/vr/display/client     stream 0666 system graphics u:object_r:pdx_display_client_endpoint_socket:s0       socket pdx/system/vr/display/manager    stream 0666 system graphics u:object_r:pdx_display_manager_endpoint_socket:s0</span><br><span class="line">    socket pdx/system/vr/display/vsync      stream 0666 system graphics u:object_r:pdx_display_vsync_endpoint_socket:s</span><br></pre></td></tr></table></figure>
+
+<p>[main_surfaceflinger.cpp]</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">int main(int, char**) &#123;</span><br><span class="line">    signal(SIGPIPE, SIG_IGN);</span><br><span class="line"></span><br><span class="line">    hardware::configureRpcThreadpool(1 /* maxThreads */,</span><br><span class="line">            false /* callerWillJoin */);</span><br><span class="line"></span><br><span class="line">    startGraphicsAllocatorService();</span><br><span class="line"></span><br><span class="line">    // When SF is launched in its own process, limit the number of</span><br><span class="line">    // binder threads to 4.</span><br><span class="line">    ProcessState::self()-&gt;setThreadPoolMaxThreadCount(4);</span><br><span class="line"></span><br><span class="line">    // start the thread pool</span><br><span class="line">    sp&lt;ProcessState&gt; ps(ProcessState::self());</span><br><span class="line">    ps-&gt;startThreadPool();</span><br><span class="line"></span><br><span class="line">    // instantiate surfaceflinger</span><br><span class="line">    sp&lt;SurfaceFlinger&gt; flinger = new SurfaceFlinger();</span><br><span class="line"></span><br><span class="line">    setpriority(PRIO_PROCESS, 0, PRIORITY_URGENT_DISPLAY);</span><br><span class="line"></span><br><span class="line">    set_sched_policy(0, SP_FOREGROUND);</span><br><span class="line"></span><br><span class="line">    // Put most SurfaceFlinger threads in the system-background cpuset</span><br><span class="line">    // Keeps us from unnecessarily using big cores</span><br><span class="line">    // Do this after the binder thread pool init</span><br><span class="line">    if (cpusets_enabled()) set_cpuset_policy(0, SP_SYSTEM);</span><br><span class="line"></span><br><span class="line">    // initialize before clients can connect</span><br><span class="line">    flinger-&gt;init();</span><br><span class="line"></span><br><span class="line">    // publish surface flinger</span><br><span class="line">    sp&lt;IServiceManager&gt; sm(defaultServiceManager());</span><br><span class="line">    sm-&gt;addService(String16(SurfaceFlinger::getServiceName()), flinger, false,</span><br><span class="line">                   IServiceManager::DUMP_FLAG_PRIORITY_CRITICAL);</span><br><span class="line"></span><br><span class="line">    // publish GpuService</span><br><span class="line">    sp&lt;GpuService&gt; gpuservice = new GpuService();</span><br><span class="line">    sm-&gt;addService(String16(GpuService::SERVICE_NAME), gpuservice, false);</span><br><span class="line"></span><br><span class="line">    startDisplayService(); // dependency on SF getting registered above</span><br><span class="line"></span><br><span class="line">    struct sched_param param = &#123;0&#125;;</span><br><span class="line">    param.sched_priority = 2;</span><br><span class="line">    if (sched_setscheduler(0, SCHED_FIFO, &amp;param) != 0) &#123;</span><br><span class="line">        ALOGE(&quot;Couldn&apos;t set SCHED_FIFO&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // run surface flinger in this thread</span><br><span class="line">    flinger-&gt;run();</span><br><span class="line"></span><br><span class="line">    return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>SurfaceFlinger 类继承于 BnSurfaceComposer，实现 ISurfaceComposer 本地接口。Android P 版本从 SurfaceFlinger 类中拆分出 SurfaceFlingerBE，实现前后端分离，前端和上层进行交互，后端 SurfaceFlingerBE 和底层硬件合成进行交互。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">class SurfaceFlinger : public BnSurfaceComposer,</span><br><span class="line">                       public PriorityDumper,</span><br><span class="line">                       private IBinder::DeathRecipient,</span><br><span class="line">                       private HWC2::ComposerCallback</span><br></pre></td></tr></table></figure>
+
+<p>具体的类图关系如下图：</p>
+<p>后面我们将以 SurfaceFlinger 为主线，结合源代码进行情景分析，梳理整个图像系统。</p>
+<ul>
+<li>WindowManager: 首先需要知道 Surface 是由谁创建的？是如何绘制和更新的，窗口的动画切换是怎样做的？窗口的显示和隐藏是如何控制的？</li>
+<li>SurfaceFlinger: Surface 使用的图像缓冲区是什么时候创建、管理和销毁的？多个 Surface 是如何合成的？如何实现多屏显示的？</li>
+<li>Activity: Activity 的生命周期是怎样的？</li>
+<li>InputManager: 底层按键事件是如何上报到Android系统的，又是如何到具体的窗口进行处理的？</li>
+</ul>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/11/27/Android智能指针/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -279,7 +544,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-05 11:03:03" itemprop="dateModified" datetime="2019-12-05T11:03:03+08:00">2019-12-05</time>
+                <time title="修改时间：2019-12-05 21:07:53" itemprop="dateModified" datetime="2019-12-05T21:07:53+08:00">2019-12-05</time>
               </span>
             
           
@@ -315,7 +580,7 @@
 <p>相关代码位于：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">system/core/libutils/include/utils/RefBase.h</span><br><span class="line">/system/core/libutils/include/util/StrongPointer.h</span><br><span class="line">system/core/libutils/RefBase.cpp</span><br><span class="line">system/core/libutils/StrongPointer.cpp</span><br></pre></td></tr></table></figure>
 
-<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/RefBase.png" alt="RefBase"></p>
+<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/Surface.png" alt="Surface"></p>
 <h1 id="sp模板类"><a href="#sp模板类" class="headerlink" title="sp模板类"></a>sp模板类</h1><p>[ StrongPointer.h ]</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">class sp &#123;</span><br><span class="line">public:</span><br><span class="line">    inline sp() : m_ptr(0) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    sp(T* other);  // NOLINT(implicit)</span><br><span class="line">    sp(const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp(sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp(U* other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(const sp&lt;U&gt;&amp; other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(sp&lt;U&gt;&amp;&amp; other);  // NOLINT(implicit)</span><br><span class="line"></span><br><span class="line">    ~sp();</span><br><span class="line"></span><br><span class="line">    // Assignment</span><br><span class="line">    sp&amp; operator = (T* other);</span><br><span class="line">    sp&amp; operator = (const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp&amp; operator = (sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line"></span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (const sp&lt;U&gt;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (sp&lt;U&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (U* other);</span><br><span class="line"></span><br><span class="line">    //! Special optimization for use by ProcessState (and nobody else).</span><br><span class="line">    void force_set(T* other);</span><br><span class="line"></span><br><span class="line">    // Reset</span><br><span class="line">    void clear();</span><br><span class="line"></span><br><span class="line">    //指针访问重载</span><br><span class="line">    inline T&amp;       operator* () const     &#123; return *m_ptr; &#125;</span><br><span class="line">    inline T*       operator-&gt; () const    &#123; return m_ptr;  &#125;</span><br><span class="line">    inline T*       get() const            &#123; return m_ptr; &#125;</span><br><span class="line">    inline explicit operator bool () const &#123; return m_ptr != nullptr; &#125;</span><br><span class="line"></span><br><span class="line">    //操作符重载</span><br><span class="line">    COMPARE(==)</span><br><span class="line">    COMPARE(!=)</span><br><span class="line">    COMPARE(&gt;)</span><br><span class="line">    COMPARE(&lt;)</span><br><span class="line">    COMPARE(&lt;=)</span><br><span class="line">    COMPARE(&gt;=)</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    template&lt;typename Y&gt; friend class sp;</span><br><span class="line">    template&lt;typename Y&gt; friend class wp;</span><br><span class="line">    void set_pointer(T* ptr);</span><br><span class="line">    T* m_ptr;   //对应类的指针</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
@@ -415,7 +680,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-05 11:29:00" itemprop="dateModified" datetime="2019-12-05T11:29:00+08:00">2019-12-05</time>
+                <time title="修改时间：2019-12-05 11:30:42" itemprop="dateModified" datetime="2019-12-05T11:30:42+08:00">2019-12-05</time>
               </span>
             
           
@@ -648,7 +913,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-04 17:16:42" itemprop="dateModified" datetime="2019-12-04T17:16:42+08:00">2019-12-04</time>
+                <time title="修改时间：2019-12-05 21:41:21" itemprop="dateModified" datetime="2019-12-05T21:41:21+08:00">2019-12-05</time>
               </span>
             
           
@@ -1572,7 +1837,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1585,7 +1850,7 @@
             <a href="/categories/">
           
         
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -1598,7 +1863,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">8</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>

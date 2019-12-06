@@ -64,12 +64,12 @@
 <meta property="og:site_name" content="Tinylaker blog">
 <meta property="og:description" content="基于Android P源码分析，加深对RefBase、sp、wp的理解。  前言Android源码中存在大量C++代码，里面涉及智能指针的使用，除了标准库的std::shared_ptr和std::weak_ptr，还有sp/wp搭配RefBase通过强弱引用计数实现对c++对象回收机制的管理。 相关代码位于： 1234system/core/libutils/include/utils/Ref">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="http://tinylaker.github.io/2019/11/27/Android智能指针/RefBase.png">
-<meta property="og:updated_time" content="2019-12-05T03:03:03.196Z">
+<meta property="og:image" content="http://tinylaker.github.io/2019/11/27/Android智能指针/Surface.png">
+<meta property="og:updated_time" content="2019-12-05T13:07:53.316Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android智能指针">
 <meta name="twitter:description" content="基于Android P源码分析，加深对RefBase、sp、wp的理解。  前言Android源码中存在大量C++代码，里面涉及智能指针的使用，除了标准库的std::shared_ptr和std::weak_ptr，还有sp/wp搭配RefBase通过强弱引用计数实现对c++对象回收机制的管理。 相关代码位于： 1234system/core/libutils/include/utils/Ref">
-<meta name="twitter:image" content="http://tinylaker.github.io/2019/11/27/Android智能指针/RefBase.png">
+<meta name="twitter:image" content="http://tinylaker.github.io/2019/11/27/Android智能指针/Surface.png">
   <link rel="canonical" href="http://tinylaker.github.io/2019/11/27/Android智能指针/">
 
 
@@ -282,7 +282,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-05 11:03:03" itemprop="dateModified" datetime="2019-12-05T11:03:03+08:00">2019-12-05</time>
+                <time title="修改时间：2019-12-05 21:07:53" itemprop="dateModified" datetime="2019-12-05T21:07:53+08:00">2019-12-05</time>
               </span>
             
           
@@ -318,7 +318,7 @@
 <p>相关代码位于：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">system/core/libutils/include/utils/RefBase.h</span><br><span class="line">/system/core/libutils/include/util/StrongPointer.h</span><br><span class="line">system/core/libutils/RefBase.cpp</span><br><span class="line">system/core/libutils/StrongPointer.cpp</span><br></pre></td></tr></table></figure>
 
-<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/RefBase.png" alt="RefBase"></p>
+<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/Surface.png" alt="Surface"></p>
 <h1 id="sp模板类"><a href="#sp模板类" class="headerlink" title="sp模板类"></a>sp模板类</h1><p>[ StrongPointer.h ]</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">class sp &#123;</span><br><span class="line">public:</span><br><span class="line">    inline sp() : m_ptr(0) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    sp(T* other);  // NOLINT(implicit)</span><br><span class="line">    sp(const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp(sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp(U* other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(const sp&lt;U&gt;&amp; other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(sp&lt;U&gt;&amp;&amp; other);  // NOLINT(implicit)</span><br><span class="line"></span><br><span class="line">    ~sp();</span><br><span class="line"></span><br><span class="line">    // Assignment</span><br><span class="line">    sp&amp; operator = (T* other);</span><br><span class="line">    sp&amp; operator = (const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp&amp; operator = (sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line"></span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (const sp&lt;U&gt;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (sp&lt;U&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (U* other);</span><br><span class="line"></span><br><span class="line">    //! Special optimization for use by ProcessState (and nobody else).</span><br><span class="line">    void force_set(T* other);</span><br><span class="line"></span><br><span class="line">    // Reset</span><br><span class="line">    void clear();</span><br><span class="line"></span><br><span class="line">    //指针访问重载</span><br><span class="line">    inline T&amp;       operator* () const     &#123; return *m_ptr; &#125;</span><br><span class="line">    inline T*       operator-&gt; () const    &#123; return m_ptr;  &#125;</span><br><span class="line">    inline T*       get() const            &#123; return m_ptr; &#125;</span><br><span class="line">    inline explicit operator bool () const &#123; return m_ptr != nullptr; &#125;</span><br><span class="line"></span><br><span class="line">    //操作符重载</span><br><span class="line">    COMPARE(==)</span><br><span class="line">    COMPARE(!=)</span><br><span class="line">    COMPARE(&gt;)</span><br><span class="line">    COMPARE(&lt;)</span><br><span class="line">    COMPARE(&lt;=)</span><br><span class="line">    COMPARE(&gt;=)</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    template&lt;typename Y&gt; friend class sp;</span><br><span class="line">    template&lt;typename Y&gt; friend class wp;</span><br><span class="line">    void set_pointer(T* ptr);</span><br><span class="line">    T* m_ptr;   //对应类的指针</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
@@ -389,6 +389,10 @@
 
             <div class="post-nav-prev post-nav-item">
               
+                <a href="/2019/12/05/Android图像系统之一/" rel="prev" title="Android图像系统之一">
+                  Android图像系统之一 <i class="fa fa-chevron-right"></i>
+                </a>
+              
             </div>
           </div>
         
@@ -451,7 +455,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-count">9</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -464,7 +468,7 @@
             <a href="/categories/">
           
         
-        <span class="site-state-item-count">3</span>
+        <span class="site-state-item-count">4</span>
         <span class="site-state-item-name">分类</span>
         </a>
       </div>
@@ -477,7 +481,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">8</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
