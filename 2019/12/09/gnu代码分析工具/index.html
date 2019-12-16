@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=7.4.0">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=7.4.0">
+  <link rel="mask-icon" href="/images/logo.svg?v=7.4.0" color="#222">
+  <link rel="alternate" href="/atom.xml" title="Tinylaker blog" type="application/atom+xml">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="gcovgcov 是 GNU 中的代码覆盖率测试工具，随着 GCC 版本发布，可以实现对 C/C++ 文件中代码和分支覆盖测试。具体包括下面的信息：  统计每行代码的执行频率 实际执行了哪些代码 每段代码的执行时间  使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。 123$ gcc test.c --coverage$ lsa.out">
+<meta name="keywords" content="gcov">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gnu代码分析工具">
+<meta property="og:url" content="http://tinylaker.github.io/2019/12/09/gnu代码分析工具/index.html">
+<meta property="og:site_name" content="Tinylaker blog">
+<meta property="og:description" content="gcovgcov 是 GNU 中的代码覆盖率测试工具，随着 GCC 版本发布，可以实现对 C/C++ 文件中代码和分支覆盖测试。具体包括下面的信息：  统计每行代码的执行频率 实际执行了哪些代码 每段代码的执行时间  使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。 123$ gcc test.c --coverage$ lsa.out">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-09T06:13:21.158Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="gnu代码分析工具">
+<meta name="twitter:description" content="gcovgcov 是 GNU 中的代码覆盖率测试工具，随着 GCC 版本发布，可以实现对 C/C++ 文件中代码和分支覆盖测试。具体包括下面的信息：  统计每行代码的执行频率 实际执行了哪些代码 每段代码的执行时间  使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。 123$ gcc test.c --coverage$ lsa.out">
+  <link rel="canonical" href="http://tinylaker.github.io/2019/12/09/gnu代码分析工具/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>gnu代码分析工具 | Tinylaker blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?ddfa4a6ba83ff65311f95d251f9389b3";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tinylaker blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">stay hungry stay foolish</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-tags">
+      
+    
+
+    <a href="/tags/" rel="section"><i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+            
+
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/09/gnu代码分析工具/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">gnu代码分析工具
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-09 11:36:31 / 修改时间：14:13:21" itemprop="dateCreated datePublished" datetime="2019-12-09T11:36:31+08:00">2019-12-09</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/tools/" itemprop="url" rel="index"><span itemprop="name">tools</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="gcov"><a href="#gcov" class="headerlink" title="gcov"></a>gcov</h1><p>gcov 是 GNU 中的代码覆盖率测试工具，随着 GCC 版本发布，可以实现对 C/C++ 文件中代码和分支覆盖测试。具体包括下面的信息：</p>
+<ul>
+<li>统计每行代码的执行频率</li>
+<li>实际执行了哪些代码</li>
+<li>每段代码的执行时间</li>
+</ul>
+<p>使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ gcc test.c --coverage</span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>执行可执行文件，会生成对应的 gcda 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ a./out</span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.gcda  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>运行 gcov，生成对应的 gcov 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ gcov test.c</span><br><span class="line">File &apos;test.c&apos;</span><br><span class="line">Lines executed:100.00% of 7</span><br><span class="line">Creating &apos;test.c.gcov&apos;</span><br><span class="line"></span><br><span class="line">File &apos;&lt;built-in&gt;&apos;</span><br><span class="line">No executable lines</span><br><span class="line">Removing &apos;&lt;built-in&gt;.gcov&apos;</span><br><span class="line"></span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.c.gcov  test.gcda  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>test.c.gcov 文件中统计了每行代码执行的次数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">     -:    0:Source:test.c</span><br><span class="line">     -:    0:Graph:test.gcno</span><br><span class="line">     -:    0:Data:test.gcda</span><br><span class="line">     -:    0:Runs:1</span><br><span class="line">     -:    0:Programs:1</span><br><span class="line">     -:    1:#include &lt;stdio.h&gt;</span><br><span class="line">     -:    2:</span><br><span class="line">100000:    3:void test(int i) &#123;</span><br><span class="line">100000:    4:    if (i % 4 == 0)</span><br><span class="line"> 25000:    5:        printf(&quot;%d\n&quot;, i);</span><br><span class="line">100000:    6:&#125;</span><br><span class="line">     -:    7:</span><br><span class="line">     -:    8:</span><br><span class="line">     1:    9:int main(int argc, char **argv) &#123;</span><br><span class="line">100001:   10:    for (int i = 0; i &lt; 100000; i++) &#123;</span><br><span class="line">100000:   11:        test(i);</span><br><span class="line">     -:   12:    &#125;</span><br><span class="line">     -:   13:&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="gprof"><a href="#gprof" class="headerlink" title="gprof"></a>gprof</h1><p>结合 gprof 工具，能够看出函数之间的调用关系及执行的时间，完成代码优化。</p>
+<p>使用 gprof，需要添加编译选项 ‘-pg’ 进行编译</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ gcc test.c -pg</span><br><span class="line">$ ls </span><br><span class="line">a.out  test.c</span><br></pre></td></tr></table></figure>
+
+<p>执行可执行文件，生成对应的 gmon.out 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ./a.out</span><br><span class="line">$ ls</span><br><span class="line">a.out  gmon.out  test.c</span><br></pre></td></tr></table></figure>
+
+<p>运行 gprof，显示详细的函数调用信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">$ gprof -b a.out</span><br><span class="line">Flat profile:</span><br><span class="line"></span><br><span class="line">Each sample counts as 0.01 seconds.</span><br><span class="line"> no time accumulated</span><br><span class="line"></span><br><span class="line">  %   cumulative   self              self     total</span><br><span class="line"> time   seconds   seconds    calls  Ts/call  Ts/call  name</span><br><span class="line">  0.00      0.00     0.00   100000     0.00     0.00  test</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                        Call graph</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">granularity: each sample hit covers 2 byte(s) no time propagated</span><br><span class="line"></span><br><span class="line">index % time    self  children    called     name</span><br><span class="line">                0.00    0.00  100000/100000      main [7]</span><br><span class="line">[1]      0.0    0.00    0.00  100000         test [1]</span><br><span class="line">-----------------------------------------------</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Index by function name</span><br><span class="line"></span><br><span class="line">   [1] test</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>参考资料：<a href="https://gcc.gnu.org/onlinedocs/gcc/Gcov-Intro.html" target="_blank" rel="noopener">https://gcc.gnu.org/onlinedocs/gcc/Gcov-Intro.html</a></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/gcov/" rel="tag"># gcov</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/12/06/gtest测试框架使用/" rel="next" title="gtest测试框架使用">
+                  <i class="fa fa-chevron-left"></i> gtest测试框架使用
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#gcov"><span class="nav-number">1.</span> <span class="nav-text">gcov</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gprof"><span class="nav-number">2.</span> <span class="nav-text">gprof</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">tinylaker</p>
+  <div class="site-description" itemprop="description">个人学习总结</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">10</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+          
+            <a href="/tags/">
+          
+        
+        <span class="site-state-item-count">9</span>
+        <span class="site-state-item-name">标签</span>
+        </a>
+      </div>
+    
+  </nav>
+  <div class="feed-link motion-element">
+    <a href="/atom.xml" rel="alternate">
+      <i class="fa fa-rss"></i>RSS
+    </a>
+  </div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/tinylaker" title="GitHub &rarr; https://github.com/tinylaker" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="mailto:xyxujinlong@163.com" title="E-Mail &rarr; mailto:xyxujinlong@163.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tinylaker</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0</div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.4.0</div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/pisces.js?v=7.4.0"></script>
+
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+</body>
+</html>

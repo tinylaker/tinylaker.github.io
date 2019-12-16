@@ -64,7 +64,7 @@
 <meta property="og:site_name" content="Tinylaker blog">
 <meta property="og:description" content="前言在实际项目开发过程中，需要进行必要的单元测试，以保证代码开发阶段的功能性。这里简单介绍下 google 跨平台的c++单元测试框架 gtest。 安装gtest 编译需要 cmake 支持，安装步骤如下： 123456$ git clone https://github.com/google/googletest.git$ cd googletest/$ mkdir build$ cd bui">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-12-06T14:26:43.203Z">
+<meta property="og:updated_time" content="2019-12-13T02:36:02.547Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="gtest测试框架使用">
 <meta name="twitter:description" content="前言在实际项目开发过程中，需要进行必要的单元测试，以保证代码开发阶段的功能性。这里简单介绍下 google 跨平台的c++单元测试框架 gtest。 安装gtest 编译需要 cmake 支持，安装步骤如下： 123456$ git clone https://github.com/google/googletest.git$ cd googletest/$ mkdir build$ cd bui">
@@ -269,11 +269,19 @@
                 
               
 
-              <time title="创建时间：2019-12-06 20:44:52 / 修改时间：22:26:43" itemprop="dateCreated datePublished" datetime="2019-12-06T20:44:52+08:00">2019-12-06</time>
+              <time title="创建时间：2019-12-06 20:44:52" itemprop="dateCreated datePublished" datetime="2019-12-06T20:44:52+08:00">2019-12-06</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-13 10:36:02" itemprop="dateModified" datetime="2019-12-13T10:36:02+08:00">2019-12-13</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -308,9 +316,81 @@
 <h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>gtest 提供了TEST()宏，用来定义测试函数：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TEST(test_suite_name, test_case_name) </span><br><span class="line">&#123;</span><br><span class="line">    // test body ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>在测试函数中，gtest 提供了EXPECT_和ASSERT_两种风格的断言。如果ASSERT_执行失败了，会导致测试函数立即返回；但EXPECT_如果执行失败了，并不会导致测试函数返回。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TEST(MyTest, Add) </span><br><span class="line">&#123;</span><br><span class="line">    EXPECT_EQ(1 + 1, 2);</span><br><span class="line">    ASSERT_EQ(1 + 1, 2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<p>在测试函数中，gtest 提供了 <code>EXPECT_*</code> 和 <code>ASSERT_*</code> 两种风格的断言。如果 <code>ASSERT_*</code> 执行失败了，会导致测试函数立即返回；但 <code>EXPECT_*</code> 如果执行失败了，并不会导致测试函数返回。</p>
+<table>
+<thead>
+<tr>
+<th>ASSERT</th>
+<th>EXPECT</th>
+<th>ESTIMATE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ASSERT_TRUE(condition);</td>
+<td>EXPECT_TRUE(condition);</td>
+<td>condition为true</td>
+</tr>
+<tr>
+<td>ASSERT_FALSE(condition);</td>
+<td>EXPECT_FALSE(condition);</td>
+<td>condition为false</td>
+</tr>
+<tr>
+<td>ASSERT_EQ(expected, actual);</td>
+<td>EXPECT_EQ(expected, actual);</td>
+<td>expected == actual</td>
+</tr>
+<tr>
+<td>ASSERT_NE(val1, val2);</td>
+<td>EXPECT_NE(val1, val2);</td>
+<td>val1 != val2</td>
+</tr>
+<tr>
+<td>ASSERT_LT(val1, val2);</td>
+<td>EXPECT_LT(val1, val2);</td>
+<td>val1 &lt; val2</td>
+</tr>
+<tr>
+<td>ASSERT_LE(val1, val2);</td>
+<td>EXPECT_LE(val1, val2);</td>
+<td>val1 &lt;= val2</td>
+</tr>
+<tr>
+<td>ASSERT_GT(val1, val2);</td>
+<td>EXPECT_GT(val1, val2);</td>
+<td>val1 &gt; val2</td>
+</tr>
+<tr>
+<td>ASSERT_GE(val1, val2);</td>
+<td>EXPECT_GE(val1, val2);</td>
+<td>val1 &gt;= val2</td>
+</tr>
+<tr>
+<td>ASSERT_STREQ(expected_str, actual_str);</td>
+<td>EXPECT_STREQ(expected_str, actual_str);</td>
+<td>the two C strings have the same content</td>
+</tr>
+<tr>
+<td>ASSERT_STRNE(str1, str2);</td>
+<td>EXPECT_STRNE(str1, str2);</td>
+<td>the two C strings have different content</td>
+</tr>
+<tr>
+<td>ASSERT_STRCASEEQ(expected_str, actual_str);</td>
+<td>EXPECT_STRCASEEQ(expected_str, actual_str);</td>
+<td>the two C strings have the same content, ignoring case</td>
+</tr>
+<tr>
+<td>ASSERT_STRCASENE(str1, str2);</td>
+<td>EXPECT_STRCASENE(str1, str2);</td>
+<td>the two C strings have different content, ignoring case</td>
+</tr>
+<tr>
+<td><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">TEST(MyTest, Add) </span><br><span class="line">&#123;</span><br><span class="line">    EXPECT_EQ(1 + 1, 2);</span><br><span class="line">    ASSERT_EQ(1 + 1, 2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
 <ul>
 <li>编写简单的测试用例</li>
 </ul>
@@ -372,6 +452,10 @@
             <span class="post-nav-divider"></span>
 
             <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/12/09/gnu代码分析工具/" rel="prev" title="gnu代码分析工具">
+                  gnu代码分析工具 <i class="fa fa-chevron-right"></i>
+                </a>
               
             </div>
           </div>
@@ -435,7 +519,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -461,7 +545,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>

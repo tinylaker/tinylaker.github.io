@@ -239,6 +239,122 @@
   
   
   <div class="post-block home">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/09/gnu代码分析工具/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+            
+            <a href="/2019/12/09/gnu代码分析工具/" class="post-title-link" itemprop="url">gnu代码分析工具</a>
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-12-09 11:36:31 / 修改时间：14:13:21" itemprop="dateCreated datePublished" datetime="2019-12-09T11:36:31+08:00">2019-12-09</time>
+            </span>
+          
+            
+
+            
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/tools/" itemprop="url" rel="index"><span itemprop="name">tools</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h1 id="gcov"><a href="#gcov" class="headerlink" title="gcov"></a>gcov</h1><p>gcov 是 GNU 中的代码覆盖率测试工具，随着 GCC 版本发布，可以实现对 C/C++ 文件中代码和分支覆盖测试。具体包括下面的信息：</p>
+<ul>
+<li>统计每行代码的执行频率</li>
+<li>实际执行了哪些代码</li>
+<li>每段代码的执行时间</li>
+</ul>
+<p>使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ gcc test.c --coverage</span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>执行可执行文件，会生成对应的 gcda 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ a./out</span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.gcda  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>运行 gcov，生成对应的 gcov 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ gcov test.c</span><br><span class="line">File &apos;test.c&apos;</span><br><span class="line">Lines executed:100.00% of 7</span><br><span class="line">Creating &apos;test.c.gcov&apos;</span><br><span class="line"></span><br><span class="line">File &apos;&lt;built-in&gt;&apos;</span><br><span class="line">No executable lines</span><br><span class="line">Removing &apos;&lt;built-in&gt;.gcov&apos;</span><br><span class="line"></span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.c.gcov  test.gcda  test.gcno</span><br></pre></td></tr></table></figure>
+
+<p>test.c.gcov 文件中统计了每行代码执行的次数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">     -:    0:Source:test.c</span><br><span class="line">     -:    0:Graph:test.gcno</span><br><span class="line">     -:    0:Data:test.gcda</span><br><span class="line">     -:    0:Runs:1</span><br><span class="line">     -:    0:Programs:1</span><br><span class="line">     -:    1:#include &lt;stdio.h&gt;</span><br><span class="line">     -:    2:</span><br><span class="line">100000:    3:void test(int i) &#123;</span><br><span class="line">100000:    4:    if (i % 4 == 0)</span><br><span class="line"> 25000:    5:        printf(&quot;%d\n&quot;, i);</span><br><span class="line">100000:    6:&#125;</span><br><span class="line">     -:    7:</span><br><span class="line">     -:    8:</span><br><span class="line">     1:    9:int main(int argc, char **argv) &#123;</span><br><span class="line">100001:   10:    for (int i = 0; i &lt; 100000; i++) &#123;</span><br><span class="line">100000:   11:        test(i);</span><br><span class="line">     -:   12:    &#125;</span><br><span class="line">     -:   13:&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="gprof"><a href="#gprof" class="headerlink" title="gprof"></a>gprof</h1><p>结合 gprof 工具，能够看出函数之间的调用关系及执行的时间，完成代码优化。</p>
+<p>使用 gprof，需要添加编译选项 ‘-pg’ 进行编译</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ gcc test.c -pg</span><br><span class="line">$ ls </span><br><span class="line">a.out  test.c</span><br></pre></td></tr></table></figure>
+
+<p>执行可执行文件，生成对应的 gmon.out 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ./a.out</span><br><span class="line">$ ls</span><br><span class="line">a.out  gmon.out  test.c</span><br></pre></td></tr></table></figure>
+
+<p>运行 gprof，显示详细的函数调用信息</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">$ gprof -b a.out</span><br><span class="line">Flat profile:</span><br><span class="line"></span><br><span class="line">Each sample counts as 0.01 seconds.</span><br><span class="line"> no time accumulated</span><br><span class="line"></span><br><span class="line">  %   cumulative   self              self     total</span><br><span class="line"> time   seconds   seconds    calls  Ts/call  Ts/call  name</span><br><span class="line">  0.00      0.00     0.00   100000     0.00     0.00  test</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">                        Call graph</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">granularity: each sample hit covers 2 byte(s) no time propagated</span><br><span class="line"></span><br><span class="line">index % time    self  children    called     name</span><br><span class="line">                0.00    0.00  100000/100000      main [7]</span><br><span class="line">[1]      0.0    0.00    0.00  100000         test [1]</span><br><span class="line">-----------------------------------------------</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">Index by function name</span><br><span class="line"></span><br><span class="line">   [1] test</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>参考资料：<a href="https://gcc.gnu.org/onlinedocs/gcc/Gcov-Intro.html" target="_blank" rel="noopener">https://gcc.gnu.org/onlinedocs/gcc/Gcov-Intro.html</a></li>
+</ul>
+
+        
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+          <div class="post-eof"></div>
+        
+      </footer>
+  </div>
+  
+  
+  
+  </article>
+
+    
+        <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block home">
     <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/06/gtest测试框架使用/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -268,11 +384,19 @@
                 
               
 
-              <time title="创建时间：2019-12-06 20:44:52 / 修改时间：22:26:43" itemprop="dateCreated datePublished" datetime="2019-12-06T20:44:52+08:00">2019-12-06</time>
+              <time title="创建时间：2019-12-06 20:44:52" itemprop="dateCreated datePublished" datetime="2019-12-06T20:44:52+08:00">2019-12-06</time>
             </span>
           
             
 
+            
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2019-12-13 10:36:02" itemprop="dateModified" datetime="2019-12-13T10:36:02+08:00">2019-12-13</time>
+              </span>
             
           
             <span class="post-meta-item">
@@ -307,9 +431,81 @@
 <h1 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h1><p>gtest 提供了TEST()宏，用来定义测试函数：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">TEST(test_suite_name, test_case_name) </span><br><span class="line">&#123;</span><br><span class="line">    // test body ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>在测试函数中，gtest 提供了EXPECT_和ASSERT_两种风格的断言。如果ASSERT_执行失败了，会导致测试函数立即返回；但EXPECT_如果执行失败了，并不会导致测试函数返回。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TEST(MyTest, Add) </span><br><span class="line">&#123;</span><br><span class="line">    EXPECT_EQ(1 + 1, 2);</span><br><span class="line">    ASSERT_EQ(1 + 1, 2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
+<p>在测试函数中，gtest 提供了 <code>EXPECT_*</code> 和 <code>ASSERT_*</code> 两种风格的断言。如果 <code>ASSERT_*</code> 执行失败了，会导致测试函数立即返回；但 <code>EXPECT_*</code> 如果执行失败了，并不会导致测试函数返回。</p>
+<table>
+<thead>
+<tr>
+<th>ASSERT</th>
+<th>EXPECT</th>
+<th>ESTIMATE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ASSERT_TRUE(condition);</td>
+<td>EXPECT_TRUE(condition);</td>
+<td>condition为true</td>
+</tr>
+<tr>
+<td>ASSERT_FALSE(condition);</td>
+<td>EXPECT_FALSE(condition);</td>
+<td>condition为false</td>
+</tr>
+<tr>
+<td>ASSERT_EQ(expected, actual);</td>
+<td>EXPECT_EQ(expected, actual);</td>
+<td>expected == actual</td>
+</tr>
+<tr>
+<td>ASSERT_NE(val1, val2);</td>
+<td>EXPECT_NE(val1, val2);</td>
+<td>val1 != val2</td>
+</tr>
+<tr>
+<td>ASSERT_LT(val1, val2);</td>
+<td>EXPECT_LT(val1, val2);</td>
+<td>val1 &lt; val2</td>
+</tr>
+<tr>
+<td>ASSERT_LE(val1, val2);</td>
+<td>EXPECT_LE(val1, val2);</td>
+<td>val1 &lt;= val2</td>
+</tr>
+<tr>
+<td>ASSERT_GT(val1, val2);</td>
+<td>EXPECT_GT(val1, val2);</td>
+<td>val1 &gt; val2</td>
+</tr>
+<tr>
+<td>ASSERT_GE(val1, val2);</td>
+<td>EXPECT_GE(val1, val2);</td>
+<td>val1 &gt;= val2</td>
+</tr>
+<tr>
+<td>ASSERT_STREQ(expected_str, actual_str);</td>
+<td>EXPECT_STREQ(expected_str, actual_str);</td>
+<td>the two C strings have the same content</td>
+</tr>
+<tr>
+<td>ASSERT_STRNE(str1, str2);</td>
+<td>EXPECT_STRNE(str1, str2);</td>
+<td>the two C strings have different content</td>
+</tr>
+<tr>
+<td>ASSERT_STRCASEEQ(expected_str, actual_str);</td>
+<td>EXPECT_STRCASEEQ(expected_str, actual_str);</td>
+<td>the two C strings have the same content, ignoring case</td>
+</tr>
+<tr>
+<td>ASSERT_STRCASENE(str1, str2);</td>
+<td>EXPECT_STRCASENE(str1, str2);</td>
+<td>the two C strings have different content, ignoring case</td>
+</tr>
+<tr>
+<td><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">TEST(MyTest, Add) </span><br><span class="line">&#123;</span><br><span class="line">    EXPECT_EQ(1 + 1, 2);</span><br><span class="line">    ASSERT_EQ(1 + 1, 2);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
 <ul>
 <li>编写简单的测试用例</li>
 </ul>
@@ -401,7 +597,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-06 20:44:05" itemprop="dateModified" datetime="2019-12-06T20:44:05+08:00">2019-12-06</time>
+                <time title="修改时间：2019-12-16 11:17:34" itemprop="dateModified" datetime="2019-12-16T11:17:34+08:00">2019-12-16</time>
               </span>
             
           
@@ -475,10 +671,10 @@
 <p>具体的类图关系如下图：</p>
 <p>后面我们将以 SurfaceFlinger 为主线，结合源代码进行情景分析，梳理整个图像系统。</p>
 <ul>
-<li>WindowManager: 首先需要知道 Surface 是由谁创建的？是如何绘制和更新的，窗口的动画切换是怎样做的？窗口的显示和隐藏是如何控制的？</li>
-<li>SurfaceFlinger: Surface 使用的图像缓冲区是什么时候创建、管理和销毁的？多个 Surface 是如何合成的？如何实现多屏显示的？</li>
-<li>Activity: Activity 的生命周期是怎样的？</li>
-<li>InputManager: 底层按键事件是如何上报到Android系统的，又是如何到具体的窗口进行处理的？</li>
+<li><strong>WindowManager</strong>: 首先需要知道 Surface 是由谁创建的？是如何绘制和更新的，窗口的动画切换是怎样做的？窗口的显示和隐藏是如何控制的？</li>
+<li><strong>SurfaceFlinger</strong>: Surface 使用的图像缓冲区是什么时候创建、管理和销毁的？多个 Surface 是如何合成的？如何实现多屏显示的？</li>
+<li><strong>Activity</strong>: Activity 的生命周期是怎样的？</li>
+<li><strong>InputManager</strong>: 底层按键事件是如何上报到Android系统的，又是如何到具体的窗口进行处理的？</li>
 </ul>
 
         
@@ -544,7 +740,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-12-05 21:07:53" itemprop="dateModified" datetime="2019-12-05T21:07:53+08:00">2019-12-05</time>
+                <time title="修改时间：2019-12-16 11:35:38" itemprop="dateModified" datetime="2019-12-16T11:35:38+08:00">2019-12-16</time>
               </span>
             
           
@@ -580,7 +776,7 @@
 <p>相关代码位于：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">system/core/libutils/include/utils/RefBase.h</span><br><span class="line">/system/core/libutils/include/util/StrongPointer.h</span><br><span class="line">system/core/libutils/RefBase.cpp</span><br><span class="line">system/core/libutils/StrongPointer.cpp</span><br></pre></td></tr></table></figure>
 
-<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/Surface.png" alt="Surface"></p>
+<p>类图关系如下：<br><img src="//tinylaker.github.io/2019/11/27/Android智能指针/RefBase.png" alt="RefBase"></p>
 <h1 id="sp模板类"><a href="#sp模板类" class="headerlink" title="sp模板类"></a>sp模板类</h1><p>[ StrongPointer.h ]</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">class sp &#123;</span><br><span class="line">public:</span><br><span class="line">    inline sp() : m_ptr(0) &#123; &#125;</span><br><span class="line"></span><br><span class="line">    sp(T* other);  // NOLINT(implicit)</span><br><span class="line">    sp(const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp(sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp(U* other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(const sp&lt;U&gt;&amp; other);  // NOLINT(implicit)</span><br><span class="line">    template&lt;typename U&gt; sp(sp&lt;U&gt;&amp;&amp; other);  // NOLINT(implicit)</span><br><span class="line"></span><br><span class="line">    ~sp();</span><br><span class="line"></span><br><span class="line">    // Assignment</span><br><span class="line">    sp&amp; operator = (T* other);</span><br><span class="line">    sp&amp; operator = (const sp&lt;T&gt;&amp; other);</span><br><span class="line">    sp&amp; operator = (sp&lt;T&gt;&amp;&amp; other);</span><br><span class="line"></span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (const sp&lt;U&gt;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (sp&lt;U&gt;&amp;&amp; other);</span><br><span class="line">    template&lt;typename U&gt; sp&amp; operator = (U* other);</span><br><span class="line"></span><br><span class="line">    //! Special optimization for use by ProcessState (and nobody else).</span><br><span class="line">    void force_set(T* other);</span><br><span class="line"></span><br><span class="line">    // Reset</span><br><span class="line">    void clear();</span><br><span class="line"></span><br><span class="line">    //指针访问重载</span><br><span class="line">    inline T&amp;       operator* () const     &#123; return *m_ptr; &#125;</span><br><span class="line">    inline T*       operator-&gt; () const    &#123; return m_ptr;  &#125;</span><br><span class="line">    inline T*       get() const            &#123; return m_ptr; &#125;</span><br><span class="line">    inline explicit operator bool () const &#123; return m_ptr != nullptr; &#125;</span><br><span class="line"></span><br><span class="line">    //操作符重载</span><br><span class="line">    COMPARE(==)</span><br><span class="line">    COMPARE(!=)</span><br><span class="line">    COMPARE(&gt;)</span><br><span class="line">    COMPARE(&lt;)</span><br><span class="line">    COMPARE(&lt;=)</span><br><span class="line">    COMPARE(&gt;=)</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">    template&lt;typename Y&gt; friend class sp;</span><br><span class="line">    template&lt;typename Y&gt; friend class wp;</span><br><span class="line">    void set_pointer(T* ptr);</span><br><span class="line">    T* m_ptr;   //对应类的指针</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
@@ -1837,7 +2033,7 @@
         
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">10</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -1863,7 +2059,7 @@
             <a href="/tags/">
           
         
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">9</span>
         <span class="site-state-item-name">标签</span>
         </a>
       </div>
