@@ -38,10 +38,10 @@
     </summary>
     
     
-      <category term="Android" scheme="http://tinylaker.github.io/categories/Android/"/>
+      <category term="Android" scheme="http://tinylaker.github.io//categories/Android/"/>
     
     
-      <category term="Light" scheme="http://tinylaker.github.io/tags/Light/"/>
+      <category term="Light" scheme="http://tinylaker.github.io//tags/Light/"/>
     
   </entry>
   
@@ -64,10 +64,10 @@
     </summary>
     
     
-      <category term="tools" scheme="http://tinylaker.github.io/categories/tools/"/>
+      <category term="tools" scheme="http://tinylaker.github.io//categories/tools/"/>
     
     
-      <category term="gcov" scheme="http://tinylaker.github.io/tags/gcov/"/>
+      <category term="gcov" scheme="http://tinylaker.github.io//tags/gcov/"/>
     
   </entry>
   
@@ -90,10 +90,10 @@
     </summary>
     
     
-      <category term="tools" scheme="http://tinylaker.github.io/categories/tools/"/>
+      <category term="tools" scheme="http://tinylaker.github.io//categories/tools/"/>
     
     
-      <category term="gtest" scheme="http://tinylaker.github.io/tags/gtest/"/>
+      <category term="gtest" scheme="http://tinylaker.github.io//tags/gtest/"/>
     
   </entry>
   
@@ -119,10 +119,10 @@
     </summary>
     
     
-      <category term="Android" scheme="http://tinylaker.github.io/categories/Android/"/>
+      <category term="Android" scheme="http://tinylaker.github.io//categories/Android/"/>
     
     
-      <category term="GUI" scheme="http://tinylaker.github.io/tags/GUI/"/>
+      <category term="GUI" scheme="http://tinylaker.github.io//tags/GUI/"/>
     
   </entry>
   
@@ -148,10 +148,10 @@
     </summary>
     
     
-      <category term="Android" scheme="http://tinylaker.github.io/categories/Android/"/>
+      <category term="Android" scheme="http://tinylaker.github.io//categories/Android/"/>
     
     
-      <category term="智能指针" scheme="http://tinylaker.github.io/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/"/>
+      <category term="智能指针" scheme="http://tinylaker.github.io//tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/"/>
     
   </entry>
   
@@ -175,10 +175,10 @@
     </summary>
     
     
-      <category term="Product" scheme="http://tinylaker.github.io/categories/Product/"/>
+      <category term="Product" scheme="http://tinylaker.github.io//categories/Product/"/>
     
     
-      <category term="performance" scheme="http://tinylaker.github.io/tags/performance/"/>
+      <category term="performance" scheme="http://tinylaker.github.io//tags/performance/"/>
     
   </entry>
   
@@ -202,10 +202,10 @@
     </summary>
     
     
-      <category term="Android" scheme="http://tinylaker.github.io/categories/Android/"/>
+      <category term="Android" scheme="http://tinylaker.github.io//categories/Android/"/>
     
     
-      <category term="GUI" scheme="http://tinylaker.github.io/tags/GUI/"/>
+      <category term="GUI" scheme="http://tinylaker.github.io//tags/GUI/"/>
     
   </entry>
   
@@ -230,10 +230,10 @@
     </summary>
     
     
-      <category term="Android" scheme="http://tinylaker.github.io/categories/Android/"/>
+      <category term="Android" scheme="http://tinylaker.github.io//categories/Android/"/>
     
     
-      <category term="LCD" scheme="http://tinylaker.github.io/tags/LCD/"/>
+      <category term="LCD" scheme="http://tinylaker.github.io//tags/LCD/"/>
     
   </entry>
   
@@ -256,10 +256,10 @@
     </summary>
     
     
-      <category term="第三方库" scheme="http://tinylaker.github.io/categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
+      <category term="第三方库" scheme="http://tinylaker.github.io//categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
     
     
-      <category term="Terminal" scheme="http://tinylaker.github.io/tags/Terminal/"/>
+      <category term="Terminal" scheme="http://tinylaker.github.io//tags/Terminal/"/>
     
   </entry>
   
@@ -283,10 +283,10 @@
     </summary>
     
     
-      <category term="第三方库" scheme="http://tinylaker.github.io/categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
+      <category term="第三方库" scheme="http://tinylaker.github.io//categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
     
     
-      <category term="libusb" scheme="http://tinylaker.github.io/tags/libusb/"/>
+      <category term="libusb" scheme="http://tinylaker.github.io//tags/libusb/"/>
     
   </entry>
   
@@ -309,10 +309,10 @@
     </summary>
     
     
-      <category term="第三方库" scheme="http://tinylaker.github.io/categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
+      <category term="第三方库" scheme="http://tinylaker.github.io//categories/%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%93/"/>
     
     
-      <category term="cJSON" scheme="http://tinylaker.github.io/tags/cJSON/"/>
+      <category term="cJSON" scheme="http://tinylaker.github.io//tags/cJSON/"/>
     
   </entry>
   
