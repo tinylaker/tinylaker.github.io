@@ -46,18 +46,18 @@
   };
 </script>
 
-  <meta name="description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal Terminal简介Terminal 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。 代">
+  <meta name="description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal">
 <meta name="keywords" content="Terminal">
 <meta property="og:type" content="article">
 <meta property="og:title" content="terminal for microcontrol">
 <meta property="og:url" content="http://tinylaker.github.io/2019/09/30/terminal-for-microcontrol/index.html">
 <meta property="og:site_name" content="Tinylaker blog">
-<meta property="og:description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal Terminal简介Terminal 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。 代">
+<meta property="og:description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-10-06T07:34:16.000Z">
+<meta property="og:updated_time" content="2019-12-23T10:00:45.410Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="terminal for microcontrol">
-<meta name="twitter:description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal Terminal简介Terminal 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。 代">
+<meta name="twitter:description" content="写在前面此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 Terminal">
 
 <link rel="canonical" href="http://tinylaker.github.io/2019/09/30/terminal-for-microcontrol/">
 
@@ -156,17 +156,17 @@
   </li>
         <li class="menu-item menu-item-tags">
 
-    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签</a>
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">10</span></a>
 
   </li>
         <li class="menu-item menu-item-categories">
 
-    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">4</span></a>
 
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">11</span></a>
 
   </li>
   </ul>
@@ -225,7 +225,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2019-10-06 15:34:16" itemprop="dateModified" datetime="2019-10-06T15:34:16+08:00">2019-10-06</time>
+                <time title="修改时间：2019-12-23 18:00:45" itemprop="dateModified" datetime="2019-12-23T18:00:45+08:00">2019-12-23</time>
               </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
@@ -265,6 +265,8 @@
 
       
         <h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 <a href="git@github.com:JingoC/terminal.git">Terminal</a></p>
+<a id="more"></a>
+
 <h1 id="Terminal简介"><a href="#Terminal简介" class="headerlink" title="Terminal简介"></a>Terminal简介</h1><p><code>Terminal</code> 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。</p>
 <p>代码的目录结构如下，</p>
 <ul>

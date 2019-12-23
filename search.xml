@@ -7,6 +7,8 @@
 <p>基于Android P源码分析，深入理解Android 灯光系统框架。</p>
 </blockquote>
 <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>灯光系统相对比较简单，但涉及多种不同的灯光类型，包括背光灯、电池灯、呼吸灯等。</p>
+<a id="more"></a>
+
 <h1 id="Java服务"><a href="#Java服务" class="headerlink" title="Java服务"></a>Java服务</h1><h2 id="SystemServer-java"><a href="#SystemServer-java" class="headerlink" title="SystemServer.java"></a>SystemServer.java</h2><p>zygote 进程启动时会加载 SystemServer.main() 方法，启动系统服务，其中就包括 LightsService 和 startHidlServices。</p>
 <blockquote>
 <p>frameworks/base/services/java/com/android/server/SystemServer.java</p>
@@ -119,6 +121,8 @@
 <li>实际执行了哪些代码</li>
 <li>每段代码的执行时间</li>
 </ul>
+<a id="more"></a>
+
 <p>使用 gcov 分析代码前，需要添加编译选项 ‘–coverage’，编译会生成源码对应的 gcno 文件。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ gcc test.c --coverage</span><br><span class="line">$ ls</span><br><span class="line">a.out  test.c  test.gcno</span><br></pre></td></tr></table></figure>
 
@@ -156,6 +160,7 @@
     <title>gtest测试框架使用</title>
     <url>/2019/12/06/gtest%E6%B5%8B%E8%AF%95%E6%A1%86%E6%9E%B6%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在实际项目开发过程中，需要进行必要的单元测试，以保证代码开发阶段的功能性。这里简单介绍下 google 跨平台的c++单元测试框架 gtest。</p>
+<a id="more"></a>
 <h1 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h1><p>gtest 编译需要 cmake 支持，安装步骤如下：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">$ git clone https://github.com/google/googletest.git</span><br><span class="line">$ cd googletest/</span><br><span class="line">$ mkdir build</span><br><span class="line">$ cd build/</span><br><span class="line">$ cmake ..</span><br><span class="line">$ sudo make install</span><br></pre></td></tr></table></figure>
 
@@ -279,6 +284,7 @@
 <p>基于Android P源码分析，深入理解Android GUI的框架。</p>
 </blockquote>
 <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Android图像系统框架比较复杂，涉及WindowManager、SurfaceFlinger、ActivityManager、InputManager等模块。因为笔者此前从事过底层显示驱动相关工作，期望通过梳理Android显示系统的框架构建完整的知识体系。</p>
+<a id="more"></a>
 <p>它们之间的关系如下：<br><img src="//tinylaker.github.io/2019/12/05/Android图像系统之一/GUI.png" alt="GUI"></p>
 <h1 id="图形框架"><a href="#图形框架" class="headerlink" title="图形框架"></a>图形框架</h1><blockquote>
 <p>参考 <a href="https://source.android.com/devices/graphics" target="_blank" rel="noopener">https://source.android.com/devices/graphics</a></p>
@@ -340,6 +346,7 @@
 <p>基于Android P源码分析，加深对RefBase、sp、wp的理解。</p>
 </blockquote>
 <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Android源码中存在大量C++代码，里面涉及智能指针的使用，除了标准库的std::shared_ptr和std::weak_ptr，还有sp/wp搭配RefBase通过强弱引用计数实现对c++对象回收机制的管理。</p>
+<a id="more"></a>
 <p>相关代码位于：</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">system/core/libutils/include/utils/RefBase.h</span><br><span class="line">/system/core/libutils/include/util/StrongPointer.h</span><br><span class="line">system/core/libutils/RefBase.cpp</span><br><span class="line">system/core/libutils/StrongPointer.cpp</span><br></pre></td></tr></table></figure>
 
@@ -379,7 +386,9 @@
 <h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>RefBase是Android C++类的父类，有一个成员变量mRefs为weakref_impl类型指针，weakref_impl是weakref_type的子类，用来管理引用计数。</p>
 <p>首次调用对象incStrong()，则会调用该对象的onFirstRef()；调用decStrong()的最后一次，则调用该对象的onLastStrongRef()。</p>
 <p>弱引用不能直接操作目标对象，因为wp模版类没有实现指针引用的重载，而sp模版类则实现了指针引用的重载，但是可以通过promote()函数将弱引用提升为强引用对象。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">sp&lt;T&gt; wp&lt;T&gt;::promote() const</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;T&gt; result;</span><br><span class="line">    if (m_ptr &amp;&amp; m_refs-&gt;attemptIncStrong(&amp;result)) &#123;</span><br><span class="line">        result.set_pointer(m_ptr);</span><br><span class="line">    &#125;</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">template&lt;typename T&gt;</span><br><span class="line">sp&lt;T&gt; wp&lt;T&gt;::promote() const</span><br><span class="line">&#123;</span><br><span class="line">    sp&lt;T&gt; result;</span><br><span class="line">    if (m_ptr &amp;&amp; m_refs-&gt;attemptIncStrong(&amp;result)) &#123;</span><br><span class="line">        result.set_pointer(m_ptr);</span><br><span class="line">    &#125;</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
       <categories>
         <category>Android</category>
       </categories>
@@ -391,6 +400,7 @@
     <title>sc770x-稳定性问题分析</title>
     <url>/2019/11/14/sc770x-%E7%A8%B3%E5%AE%9A%E6%80%A7%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<p>本文记录总结了笔者曾经参与的sc770x项目，基于 Trace32 Simulator 定位系统稳定性问题，这是 Lauterbach 公司推出的一款嵌入式系统调试工具，支持多种 CPU 和 RTOS 调试，拥有很强的扩展性，支持CMM脚本扩展。</p>
+<a id="more"></a>
 <h1 id="工具的使用"><a href="#工具的使用" class="headerlink" title="工具的使用"></a>工具的使用</h1><p>一般死机会保存对应的 ass 和 mem文件，打开 Trace32 Simulator ，导入 sc770x_simulator.cmm 脚本，加载当前系统版本对应的 axf 符号表文件。此时会提示输入 mem 地址，根据死机时保存的 ass 文件确定为0，然后再选择对应的 mem 文件，一般直接能够看到从 thread_entry 到死机现场的函数回调。如果不幸没有看到完整的回调，那么就需要自己进行推导，类似下面的情况。</p>
 <p>查看死机状态时 _tx_thread_current_ptr 的值，根据 tx_thread_name 得知当前是 T_MIDI Task 。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">_tx_thread_current_ptr = 0x01D8FADC -&gt; (</span><br><span class="line">  tx_thread_id = 1414025796,</span><br><span class="line">  tx_run_count = 20,</span><br><span class="line">  tx_stack_ptr = 0x027D6E88,</span><br><span class="line">  tx_stack_start = 0x027D68B8,</span><br><span class="line">  tx_stack_end = 0x027D7CB3,</span><br><span class="line">  tx_stack_size = 5116,</span><br><span class="line">  tx_time_slice = 0,</span><br><span class="line">  tx_new_time_slice = 0,</span><br><span class="line">  tx_ready_next = 0x01D8FADC,</span><br><span class="line">  tx_ready_previous = 0x01D8FADC,</span><br><span class="line">  tx_thread_name = 0x080467A8 -&gt; &quot;T_MIDI&quot;,</span><br><span class="line">  tx_priority = 74,</span><br><span class="line">  tx_state = 0,</span><br><span class="line">  tx_delayed_suspend = 0,</span><br><span class="line">  tx_suspending = 0,</span><br><span class="line">  tx_preempt_threshold = 74,</span><br><span class="line">  tx_priority_bit = (0, 0, 1024, 0, 0, 0, 0, 0),</span><br><span class="line">  tx_thread_entry = 0x0035B4F7,</span><br><span class="line">  tx_entry_parameter = 66011532,</span><br><span class="line">  tx_thread_timer = (tx_remaining_ticks = 0, tx_re_initialize_ticks = 0, tx_timeout_function =</span><br><span class="line">  tx_suspend_cleanup = 0x0,</span><br><span class="line">  tx_suspend_control_block = 0x0,</span><br><span class="line">  tx_suspended_next = 0x0,</span><br><span class="line">  tx_suspended_previous = 0x0,</span><br><span class="line">  tx_suspend_info = 0,</span><br><span class="line">  tx_additional_suspend_info = 0x0,</span><br><span class="line">  tx_suspend_option = 0,</span><br><span class="line">  tx_suspend_status = 0,</span><br><span class="line">  tx_created_next = 0x00C1BBA4,</span><br><span class="line">  tx_created_previous = 0x01D8F884,</span><br><span class="line">  tx_filex_ptr = 0x0,</span><br><span class="line">  time = 0,</span><br><span class="line">  tx_thread_stack_highest_ptr = 0x027D6CF8)</span><br></pre></td></tr></table></figure>
@@ -544,6 +554,8 @@
     <content><![CDATA[<p>在谈及 Android GUI 框架前，先从底层视角梳理一下显示的流程。在 Android 系统中，引入了状态栏、导航栏、壁纸和背景的图层概念，需要把这些图层进行 alpha blending 后显示。</p>
 <p>在嵌入式 linux 系统下显示界面，可以直接操作 framebuffer 的内存；但 Android 应用并不能直接操作 framebuffer，应用需要借助 SurfaceFlinger。</p>
 <p>SurfaceFlinger 通过 Gralloc HAL 向 ashmem 申请内存，供应用使用。同时使用 OpenGL 和 HardwareComposer 来合成 Surface。</p>
+<a id="more"></a>
+
 <h1 id="SurfaceFlinger内部机制"><a href="#SurfaceFlinger内部机制" class="headerlink" title="SurfaceFlinger内部机制"></a>SurfaceFlinger内部机制</h1><p>可以把应用理解为客户端，SurfaceFlinger 理解为服务端，在 SurfaceFlinger 中用 Client 对象表示应用，有多少个应用就有多少个 Client 对象。</p>
 <p>Client 对象中包含了 Layer 对象，用来对应应用层的 SurfaceControl ；其中 Layer 对象包含消费者 mSurfaceFlingerConsumer 和 生产者 mBufferQueue 成员变量，并在 onFirstRef() 方法中构建。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">sp&lt;SurfaceFlingerConsumer&gt; mSurfaceFlingerConsumer;</span><br><span class="line">sp&lt;BufferQueue&gt; mBufferQueue;</span><br></pre></td></tr></table></figure>
@@ -691,6 +703,8 @@
 <p>本文基于Android 4.4代码分析sc7731 lcd的基本流程。</p>
 <h1 id="显示系统"><a href="#显示系统" class="headerlink" title="显示系统"></a>显示系统</h1><p>这里暂时以7710芯片手册为例，多媒体显示系统包含 LCDC 和 DISPC，其中 LCDC 仅支持 MCU 接口类型，支持 2 路显示；而 DISPC 同时支持 DBI 和 DPI 接口类型。</p>
 <p><img src="//tinylaker.github.io/2019/11/09/sc7731-lcd流程分析/lcdc.png" alt="lcd"></p>
+<a id="more"></a>
+
 <ul>
 <li>LCDC</li>
 </ul>
@@ -901,6 +915,8 @@
     <title>terminal for microcontrol</title>
     <url>/2019/09/30/terminal-for-microcontrol/</url>
     <content><![CDATA[<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>此前的嵌入式项目开发过程中，因为硬件资源紧张，硬件工程师在进行原理图设计的时候没有使用芯片的串口，导致软件开发和调试极为困难。后来考虑使用USB CDC虚拟串口搭配命令行控制台进行调试，在gayhub上发现了这个开源的命令行控制项目 <a href="git@github.com:JingoC/terminal.git">Terminal</a></p>
+<a id="more"></a>
+
 <h1 id="Terminal简介"><a href="#Terminal简介" class="headerlink" title="Terminal简介"></a>Terminal简介</h1><p><code>Terminal</code> 支持跨平台、可选配置、日志命令、指令中断、回车和删除等常用按键配置，最大耗费系统内存不到10KB。</p>
 <p>代码的目录结构如下，</p>
 <ul>
@@ -949,6 +965,7 @@
 <p><strong>github</strong>: <a href="https://github.com/libusb/libusb" target="_blank" rel="noopener">https://github.com/libusb/libusb</a></p>
 <p><strong>homepage</strong>: <a href="https://libusb.info/" target="_blank" rel="noopener">https://libusb.info/</a></p>
 <p><strong>api-1.0</strong>: <a href="http://libusb.sourceforge.net/api-1.0/" target="_blank" rel="noopener">http://libusb.sourceforge.net/api-1.0/</a> </p>
+<a id="more"></a>
 <p>当产品需要添加自定义协议时，以hid协议为例，usb的固件代码比较容易实现。与此同时，主机也需要对应的协议来正确解析，这里通常有2种实现方式，第一种是在主机编写usb设备驱动解析协议，另一种是应用通过libusb解析协议，显然后一种方法更通用。</p>
 <h1 id="api"><a href="#api" class="headerlink" title="api"></a>api</h1><h2 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h2><p><strong>libusb_init</strong><br>必须最先被执行，完成libusb的初始化。libusb_context代表libusb的会话，如果参数为NULL，会默认创建一个。</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int libusb_init(libusb_context** context);</span><br></pre></td></tr></table></figure>
@@ -996,7 +1013,9 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int libusb_interrupt_transfer (struct libusb_device_handle *dev_handle, unsigned char endpoint, unsigned char *data, int length, int *transferred, unsigned int timeout);</span><br></pre></td></tr></table></figure>
 
 <h1 id="实例"><a href="#实例" class="headerlink" title="实例"></a>实例</h1><p>下面的例子，是打开vid = 1234， pid = 5678的usb设备，同时检查是否有接口0的驱动，如果有直接卸载这个驱动，并获取这个接口的所有权。</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">	int ret;</span><br><span class="line">	libusb_context *ctx;</span><br><span class="line">	libusb_device_handle* handle = NULL;  /* handle for USB device */</span><br><span class="line"></span><br><span class="line">	/* Initialise libusb. */</span><br><span class="line">	ret = libusb_init(&amp;ctx);</span><br><span class="line">	if (ret != 0)</span><br><span class="line">	&#123;</span><br><span class="line">		fprintf(stderr, &quot;Error initialising libusb.\n&quot;);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    /* Open device with vid and pid */</span><br><span class="line">	handle = libusb_open_device_with_vid_pid(0, 1234, 5678);</span><br><span class="line">	if (!handle)</span><br><span class="line">	&#123;</span><br><span class="line">		fprintf(stderr, &quot;Unable to open device.\n&quot;);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/* Check whether a kernel driver is attached to interface #0. If so, we&apos;ll</span><br><span class="line">	* need to detach it.</span><br><span class="line">	*/</span><br><span class="line">	if (libusb_kernel_driver_active(handle, 0)) &#123;</span><br><span class="line">		ret = libusb_detach_kernel_driver(handle, 0);</span><br><span class="line">		if (ret != 0) &#123;</span><br><span class="line">			fprintf(stderr, &quot;Error detaching kernel driver.\n&quot;);</span><br><span class="line">			return 1;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/* Claim interface #0. */</span><br><span class="line">	ret = libusb_claim_interface(handle, 0);</span><br><span class="line">	if (ret != 0) &#123;</span><br><span class="line">		fprintf(stderr, &quot;Error claiming interface.\n&quot;);</span><br><span class="line">	    return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>]]></content>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">int main(int argc, char *argv[])</span><br><span class="line">&#123;</span><br><span class="line">	int ret;</span><br><span class="line">	libusb_context *ctx;</span><br><span class="line">	libusb_device_handle* handle = NULL;  /* handle for USB device */</span><br><span class="line"></span><br><span class="line">	/* Initialise libusb. */</span><br><span class="line">	ret = libusb_init(&amp;ctx);</span><br><span class="line">	if (ret != 0)</span><br><span class="line">	&#123;</span><br><span class="line">		fprintf(stderr, &quot;Error initialising libusb.\n&quot;);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    /* Open device with vid and pid */</span><br><span class="line">	handle = libusb_open_device_with_vid_pid(0, 1234, 5678);</span><br><span class="line">	if (!handle)</span><br><span class="line">	&#123;</span><br><span class="line">		fprintf(stderr, &quot;Unable to open device.\n&quot;);</span><br><span class="line">		return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/* Check whether a kernel driver is attached to interface #0. If so, we&apos;ll</span><br><span class="line">	* need to detach it.</span><br><span class="line">	*/</span><br><span class="line">	if (libusb_kernel_driver_active(handle, 0)) &#123;</span><br><span class="line">		ret = libusb_detach_kernel_driver(handle, 0);</span><br><span class="line">		if (ret != 0) &#123;</span><br><span class="line">			fprintf(stderr, &quot;Error detaching kernel driver.\n&quot;);</span><br><span class="line">			return 1;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	/* Claim interface #0. */</span><br><span class="line">	ret = libusb_claim_interface(handle, 0);</span><br><span class="line">	if (ret != 0) &#123;</span><br><span class="line">		fprintf(stderr, &quot;Error claiming interface.\n&quot;);</span><br><span class="line">	    return 1;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
       <categories>
         <category>第三方库</category>
       </categories>
@@ -1009,6 +1028,8 @@
     <url>/2019/09/15/cJSON%E7%9A%84%E4%BD%BF%E7%94%A8/</url>
     <content><![CDATA[<h1 id="1-JSON格式"><a href="#1-JSON格式" class="headerlink" title="1. JSON格式"></a>1. JSON格式</h1><p>JSON(JavaScript Object Notation) 是一种轻量级的数据交换格式，易于人阅读和编写。同时也易于机器解析和生成。</p>
 <p>JSON建构于两种结构：<br><strong>键值对的集合（A collection of name/value pairs）</strong><br><strong>值的有序列表（An ordered list of values）</strong></p>
+<a id="more"></a>
+
 <h1 id="2-cJSON"><a href="#2-cJSON" class="headerlink" title="2. cJSON"></a>2. cJSON</h1><p>c语言中处理json格式的数据，可以借助于cJSON函数库，简单且效率高。</p>
 <p>cJSON的开源仓库地址： <a href="https://github.com/DaveGamble/cJSON" target="_blank" rel="noopener">https://github.com/DaveGamble/cJSON</a></p>
 <p>cJSON.h定义了结构体cJSON来描述JSON对象，定义如下：</p>
@@ -1043,7 +1064,9 @@
 
 <h3 id="2-3-4-格式化JSON数据"><a href="#2-3-4-格式化JSON数据" class="headerlink" title="2.3.4 格式化JSON数据"></a>2.3.4 格式化JSON数据</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">char *string = cJSON_Print(monitor);</span><br></pre></td></tr></table></figure>
 
-<h3 id="2-3-5-释放内存"><a href="#2-3-5-释放内存" class="headerlink" title="2.3.5 释放内存"></a>2.3.5 释放内存</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cJSON_free(string);</span><br><span class="line">cJSON_Delete(monitor);</span><br></pre></td></tr></table></figure>]]></content>
+<h3 id="2-3-5-释放内存"><a href="#2-3-5-释放内存" class="headerlink" title="2.3.5 释放内存"></a>2.3.5 释放内存</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">cJSON_free(string);</span><br><span class="line">cJSON_Delete(monitor);</span><br></pre></td></tr></table></figure>
+
+]]></content>
       <categories>
         <category>第三方库</category>
       </categories>
