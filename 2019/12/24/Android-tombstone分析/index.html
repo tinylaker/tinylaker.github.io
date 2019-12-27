@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://tinylaker.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: 'search.xml',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言Android 进程在发生异常 Crash 时，debuggerd 会在 /data/tombstone 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。">
+<meta name="keywords" content="tombstone">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android tombstone分析">
+<meta property="og:url" content="http://tinylaker.github.io/2019/12/24/Android-tombstone分析/index.html">
+<meta property="og:site_name" content="Tinylaker blog">
+<meta property="og:description" content="前言Android 进程在发生异常 Crash 时，debuggerd 会在 /data/tombstone 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-12-27T09:17:59.267Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android tombstone分析">
+<meta name="twitter:description" content="前言Android 进程在发生异常 Crash 时，debuggerd 会在 /data/tombstone 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。">
+
+<link rel="canonical" href="http://tinylaker.github.io/2019/12/24/Android-tombstone分析/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Android tombstone分析 | Tinylaker blog</title>
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?ddfa4a6ba83ff65311f95d251f9389b3";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tinylaker blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">stay hungry stay foolish</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-fw fa-tags"></i>标签<span class="badge">11</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-fw fa-th"></i>分类<span class="badge">4</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-fw fa-archive"></i>归档<span class="badge">12</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocorrect="off" autocapitalize="none"
+           placeholder="搜索..." spellcheck="false"
+           type="text" id="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result"></div>
+
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://tinylaker.github.io/2019/12/24/Android-tombstone分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="tinylaker">
+      <meta itemprop="description" content="个人学习总结">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tinylaker blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Android tombstone分析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2019-12-24 00:20:57" itemprop="dateCreated datePublished" datetime="2019-12-24T00:20:57+08:00">2019-12-24</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Android/" itemprop="url" rel="index">
+                    <span itemprop="name">Android</span>
+                  </a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>8.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>8 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Android 进程在发生异常 Crash 时，debuggerd 会在 <code>/data/tombstone</code> 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。</p>
+<a id="more"></a>
+
+<h1 id="tombstone"><a href="#tombstone" class="headerlink" title="tombstone"></a>tombstone</h1><p>以笔者最近遇到的问题为例，截取 tombstone 文件部分信息如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">pid: 3148, tid: 3365, name: TimeCheckThread  &gt;&gt;&gt; /system/bin/audioserver &lt;&lt;&lt;</span><br><span class="line">signal 6 (SIGABRT), code -6 (SI_TKILL), fault addr --------</span><br><span class="line">Abort message: &apos;TimeCheck timeout for IAudioFlinger&apos;</span><br><span class="line">    r0  00000000  r1  00000d25  r2  00000006  r3  ea39d918</span><br><span class="line">    r4  00000c4c  r5  00000d25  r6  e7d424a4  r7  0000010c</span><br><span class="line">    r8  e91edcfa  r9  e8a11f78  r10 3b9aca00  r11 e959bd69</span><br><span class="line">    ip  7fffffff  sp  e7d42490  lr  ea32c0e5  pc  ea323e72</span><br><span class="line"></span><br><span class="line">backtrace:</span><br><span class="line">    #00 pc 0001ce72  /system/lib/libc.so (abort+62)</span><br><span class="line">    #01 pc 00006dd5  /system/lib/liblog.so (__android_log_assert+156)</span><br><span class="line">    #02 pc 0000e307  /system/lib/libmedia_helper.so (android::TimeCheck::TimeCheckThread::threadLoop()+270)</span><br><span class="line">    #03 pc 0000c1bf  /system/lib/libutils.so (android::Thread::_threadLoop(void*)+286)</span><br><span class="line">    #04 pc 00063c15  /system/lib/libc.so (__pthread_start(void*)+22)</span><br><span class="line">    #05 pc 0001e065  /system/lib/libc.so (__start_thread+22)</span><br><span class="line"></span><br><span class="line">stack:</span><br><span class="line">         e7d42450  e8a11f78  [anon:libc_malloc]</span><br><span class="line">         e7d42454  3b9aca00</span><br><span class="line">         e7d42458  e959bd69  /system/lib/libutils.so (_ZN13thread_data_t10trampolineEPKS_)</span><br><span class="line">         e7d4245c  e8cd4b6d  /system/lib/liblog.so (__android_log_buf_write+252)</span><br><span class="line">         e7d42460  000003dc</span><br><span class="line">         e7d42464  ffff0208  [vectors]</span><br><span class="line">         e7d42468  00000007</span><br><span class="line">         e7d4246c  000003ff</span><br><span class="line">         e7d42470  7fffffdf</span><br><span class="line">         e7d42474  fffffff8</span><br><span class="line">         e7d42478  00000000</span><br><span class="line">         e7d4247c  6a6b4bdd</span><br><span class="line">         e7d42480  00000c4c</span><br><span class="line">         e7d42484  00000d25</span><br><span class="line">         e7d42488  e7d424a4  &lt;anonymous:e7c46000&gt;</span><br><span class="line">         e7d4248c  ea323e63  /system/lib/libc.so (abort+46)</span><br><span class="line">    #00  e7d42490  00000001</span><br><span class="line">         ........  ........</span><br><span class="line">    #01  e7d424c0  ea0d81a9  /system/lib/libmedia_helper.so</span><br><span class="line">         ........  ........</span><br><span class="line">    #02  e7d428f0  e8a0b908  [anon:libc_malloc]</span><br><span class="line">         ........  ........</span><br><span class="line">    #03  e7d42920  e7d4291c  &lt;anonymous:e7c46000&gt;</span><br><span class="line">         ........  ........</span><br><span class="line">    #04  e7d42958  ea36abff  /system/lib/libc.so (_ZL15__pthread_startPv)</span><br><span class="line">         ........  ........</span><br><span class="line">    #05  e7d42960  e7d42978  &lt;anonymous:e7c46000&gt;</span><br><span class="line">         e7d42964  ea36abff  /system/lib/libc.so (_ZL15__pthread_startPv)</span><br><span class="line">         e7d42968  e7d42970  &lt;anonymous:e7c46000&gt;</span><br><span class="line">         e7d4296c  00000000</span><br><span class="line">         e7d42970  e807f970  &lt;anonymous:e7f83000&gt;</span><br><span class="line">         e7d42974  e7c44970  &lt;anonymous:e7b48000&gt;</span><br><span class="line">         e7d42978  ffffffff</span><br><span class="line">         e7d4297c  00000000</span><br><span class="line">         e7d42980  00000001</span><br><span class="line">         e7d42984  e7c45000  [anon:thread stack guard]</span><br><span class="line">         e7d42988  000fd970</span><br><span class="line">         e7d4298c  00001000</span><br><span class="line">         e7d42990  00000000</span><br><span class="line">         e7d42994  00000000</span><br><span class="line">         e7d42998  00000003</span><br><span class="line">         e7d4299c  00000000</span><br></pre></td></tr></table></figure>
+
+<p>文件记录了发生问题的进程信息，因为 tid 和 pid 并不一致，这里是 audioserver 的线程，而提示出现问题的原因是 SIGABORT。</p>
+<p>这里保存了进程异常时的寄存器和栈回溯信息，定位到异常现场是 TimeCheckThread 线程中触发了 SIGABORT，那么如何进一步排查呢？这里需要借助别的工具。</p>
+<h1 id="addr2line"><a href="#addr2line" class="headerlink" title="addr2line"></a>addr2line</h1><p>addr2line 用来获得动态库或者可执行文件中指定地址对应的源码信息，可以快速定位到出现问题的代码。</p>
+<ul>
+<li><code>#05 pc 0001e065  /system/lib/libc.so (__start_thread+22)</code></li>
+</ul>
+<p>首先看上面这条信息，可以通过 addr2line 工具获取 libc.so 动态库中 0001e065 地址对应的源代码行数。</p>
+<p>这里需要注意不要使用 <code>out/target/product/xxx/system/lib/libc.so</code>, 因为这里的so都是经过 strip 之后生成的，去除了很多调试信息，所以直接使用 <code>out/target/product/xxx/symbols/system/lib/libc.so</code> 文件解析。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xujinlong@dagobah:~/android$ ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-addr2line -f -e out/target/product/xxx/symbols/system/lib/libc.so 0001e065</span><br><span class="line">__start_thread</span><br><span class="line">bionic/libc/bionic/clone.cpp:52</span><br></pre></td></tr></table></figure>
+
+<p>对应代码如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">43 // Called from the __bionic_clone assembler to call the thread function then exit.</span><br><span class="line">44 extern &quot;C&quot; __LIBC_HIDDEN__ void __start_thread(int (*fn)(void*), void* arg) &#123;</span><br><span class="line">45   BIONIC_STOP_UNWIND;</span><br><span class="line">46</span><br><span class="line">47   pthread_internal_t* self = __get_thread();</span><br><span class="line">48   if (self &amp;&amp; self-&gt;tid == -1) &#123;</span><br><span class="line">49     self-&gt;tid = syscall(__NR_gettid);</span><br><span class="line">50   &#125;</span><br><span class="line">51</span><br><span class="line">52   int status = (*fn)(arg);</span><br><span class="line">53   __exit(status);</span><br><span class="line">54 &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>#04 pc 00063c15  /system/lib/libc.so (__pthread_start(void*)+22)</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xujinlong@dagobah:~/s905d3$ ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-addr2line -f -e out/target/product/xxx/symbols/system/lib/libc.so 00063c15</span><br><span class="line">_ZL15__pthread_startPv</span><br><span class="line">bionic/libc/bionic/pthread_create.cpp:254</span><br></pre></td></tr></table></figure>
+
+<p>对应的代码如下:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">243 static int __pthread_start(void* arg) &#123;</span><br><span class="line">244   pthread_internal_t* thread = reinterpret_cast&lt;pthread_internal_t*&gt;(arg);</span><br><span class="line">245</span><br><span class="line">246   // Wait for our creating thread to release us. This lets it have time to</span><br><span class="line">247   // notify gdb about this thread before we start doing anything.</span><br><span class="line">248   // This also provides the memory barrier needed to ensure that all memory</span><br><span class="line">249   // accesses previously made by the creating thread are visible to us.</span><br><span class="line">250   thread-&gt;startup_handshake_lock.lock();</span><br><span class="line">251</span><br><span class="line">252   __init_alternate_signal_stack(thread);</span><br><span class="line">253</span><br><span class="line">254   void* result = thread-&gt;start_routine(thread-&gt;start_routine_arg);</span><br><span class="line">255   pthread_exit(result);</span><br><span class="line">256</span><br><span class="line">257   return 0;</span><br><span class="line">258 &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>#03 pc 0000c1bf  /system/lib/libutils.so (android::Thread::_threadLoop(void*)+286)</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xujinlong@dagobah:~/s905d3$ ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-addr2line -f -e out/target/product/xxx/symbols/system/lib/libutils.so 0000c1bf</span><br><span class="line">_ZN7android6Thread11_threadLoopEPv</span><br><span class="line">system/core/libutils/Threads.cpp:747</span><br></pre></td></tr></table></figure>
+
+<p>对应的函数如下，执行到 747 行代码，调用 <code>self-&gt;threadLoop()</code>。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line">711 int Thread::_threadLoop(void* user)</span><br><span class="line">712 &#123;</span><br><span class="line">713     Thread* const self = static_cast&lt;Thread*&gt;(user);</span><br><span class="line">714</span><br><span class="line">715     sp&lt;Thread&gt; strong(self-&gt;mHoldSelf);</span><br><span class="line">716     wp&lt;Thread&gt; weak(strong);</span><br><span class="line">717     self-&gt;mHoldSelf.clear();</span><br><span class="line">718</span><br><span class="line">719 #if defined(__ANDROID__)</span><br><span class="line">720     // this is very useful for debugging with gdb</span><br><span class="line">721     self-&gt;mTid = gettid();</span><br><span class="line">722 #endif</span><br><span class="line">723</span><br><span class="line">724     bool first = true;</span><br><span class="line">725</span><br><span class="line">726     do &#123;</span><br><span class="line">727         bool result;</span><br><span class="line">728         if (first) &#123;</span><br><span class="line">729             first = false;</span><br><span class="line">730             self-&gt;mStatus = self-&gt;readyToRun();</span><br><span class="line">731             result = (self-&gt;mStatus == NO_ERROR);</span><br><span class="line">732</span><br><span class="line">733             if (result &amp;&amp; !self-&gt;exitPending()) &#123;</span><br><span class="line">734                 // Binder threads (and maybe others) rely on threadLoop</span><br><span class="line">735                 // running at least once after a successful ::readyToRun()                                         </span><br><span class="line">736                 // (unless, of course, the thread has already been asked to exit</span><br><span class="line">737                 // at that point).</span><br><span class="line">738                 // This is because threads are essentially used like this:</span><br><span class="line">739                 //   (new ThreadSubclass())-&gt;run();</span><br><span class="line">740                 // The caller therefore does not retain a strong reference to                                      </span><br><span class="line">741                 // the thread and the thread would simply disappear after the</span><br><span class="line">742                 // successful ::readyToRun() call instead of entering the</span><br><span class="line">743                 // threadLoop at least once.</span><br><span class="line">744                 result = self-&gt;threadLoop();</span><br><span class="line">745             &#125;</span><br><span class="line">746         &#125; else &#123;</span><br><span class="line">747             result = self-&gt;threadLoop();</span><br><span class="line">748         &#125;</span><br><span class="line">749</span><br><span class="line">750         // establish a scope for mLock</span><br><span class="line">751         &#123;</span><br><span class="line">752         Mutex::Autolock _l(self-&gt;mLock);</span><br><span class="line">753         if (result == false || self-&gt;mExitPending) &#123;</span><br><span class="line">754             self-&gt;mExitPending = true;</span><br><span class="line">755             self-&gt;mRunning = false;</span><br><span class="line">756             // clear thread ID so that requestExitAndWait() does not exit if</span><br><span class="line">757             // called by a new thread using the same thread ID as this one.</span><br><span class="line">758             self-&gt;mThread = thread_id_t(-1);</span><br><span class="line">759             // note that interested observers blocked in requestExitAndWait are</span><br><span class="line">760             // awoken by broadcast, but blocked on mLock until break exits scope</span><br><span class="line">761             self-&gt;mThreadExitedCondition.broadcast();</span><br><span class="line">762             break;</span><br><span class="line">763         &#125;</span><br><span class="line">764         &#125;</span><br><span class="line">765</span><br><span class="line">766         // Release our strong reference, to let a chance to the thread</span><br><span class="line">767         // to die a peaceful death.</span><br><span class="line">768         strong.clear();</span><br><span class="line">769         // And immediately, re-acquire a strong reference for the next loop</span><br><span class="line">770         strong = weak.promote();</span><br><span class="line">771     &#125; while(strong != 0);</span><br><span class="line">772</span><br><span class="line">773     return 0;</span><br><span class="line">774 &#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>#02 pc 0000e307  /system/lib/libmedia_helper.so (android::TimeCheck::TimeCheckThread::threadLoop()+270)</code></li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">xujinlong@dagobah:~/s905d3$ ./prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/bin/arm-linux-androideabi-addr2line -f -e out/target/product/xxx/symbols/system/lib/libmedia_helper.so 0000e307</span><br><span class="line">_ZN7android9TimeCheck15TimeCheckThread10threadLoopEv</span><br><span class="line">frameworks/av/media/libmedia/TimeCheck.cpp:84</span><br></pre></td></tr></table></figure>
+
+<p>对应代码如下，调用 <code>LOG_ALWAYS_FATAL_IF</code> 函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">61 bool TimeCheck::TimeCheckThread::threadLoop()</span><br><span class="line">62 &#123;</span><br><span class="line">63     status_t status = TIMED_OUT;</span><br><span class="line">64     const char *tag;</span><br><span class="line">65     &#123;</span><br><span class="line">66         AutoMutex _l(mMutex);</span><br><span class="line">67</span><br><span class="line">68         if (exitPending()) &#123;</span><br><span class="line">69             return false;</span><br><span class="line">70         &#125;</span><br><span class="line">71</span><br><span class="line">72         nsecs_t endTimeNs = INT64_MAX;</span><br><span class="line">73         // KeyedVector mMonitorRequests is ordered so take first entry as next timeout</span><br><span class="line">74         if (mMonitorRequests.size() != 0) &#123;</span><br><span class="line">75             endTimeNs = mMonitorRequests.keyAt(0);</span><br><span class="line">76             tag = mMonitorRequests.valueAt(0);</span><br><span class="line">77         &#125;</span><br><span class="line">78</span><br><span class="line">79         const nsecs_t waitTimeNs = endTimeNs - systemTime();</span><br><span class="line">80         if (waitTimeNs &gt; 0) &#123;</span><br><span class="line">81             status = mCond.waitRelative(mMutex, waitTimeNs);</span><br><span class="line">82         &#125;</span><br><span class="line">83     &#125;</span><br><span class="line">84     LOG_ALWAYS_FATAL_IF(status != NO_ERROR, &quot;TimeCheck timeout for %s&quot;, tag);</span><br><span class="line">85     return true;</span><br><span class="line">86 &#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>结合 tombstone 文件中其他的日志信息，能够看出 AudioFlinger 线程中发生了 TimeCheck timeout</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">01-01 08:00:29.697  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:30.699  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:31.709  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:32.712  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:33.717  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:33.783  3148  3365 F         : TimeCheck timeout for IAudioFlinger</span><br><span class="line">01-01 08:00:33.817  3148  3223 W ServiceManager: Service media.audio_policy didn&apos;t start. Returning NULL</span><br><span class="line">01-01 08:00:33.817  3148  3223 W AudioSystem: AudioPolicyService not published, waiting..</span><br></pre></td></tr></table></figure>
+
+<p>结合使用场景，确认问题是系统启动过程中 Audio 设备没有接入引发的，导致 AudioServer 启动过程中无法创建对应的 AudioPolicyService 服务。</p>
+
+    </div>
+
+    
+    
+    
+        <div class="reward-container">
+  <div></div>
+  <button disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+      
+      <div style="display: inline-block;">
+        <img src="/images/wechatpay.png" alt="tinylaker 微信支付">
+        <p>微信支付</p>
+      </div>
+      
+      <div style="display: inline-block;">
+        <img src="/images/alipay.png" alt="tinylaker 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/tombstone/" rel="tag"># tombstone</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/12/20/理解Android灯光系统/" rel="prev" title="理解Android灯光系统">
+      <i class="fa fa-chevron-left"></i> 理解Android灯光系统
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#tombstone"><span class="nav-number">2.</span> <span class="nav-text">tombstone</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#addr2line"><span class="nav-number">3.</span> <span class="nav-text">addr2line</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#分析"><span class="nav-number">4.</span> <span class="nav-text">分析</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">tinylaker</p>
+  <div class="site-description" itemprop="description">个人学习总结</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">11</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/tinylaker" title="GitHub → https://github.com/tinylaker" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/xyxujinlong@163.com" title="E-Mail → xyxujinlong@163.com"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">tinylaker</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+      <span class="post-meta-item-text">站点总字数：</span>
+    <span title="站点总字数">142k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+      <span class="post-meta-item-text">站点阅读时长 &asymp;</span>
+    <span title="站点阅读时长">2:09</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v3.9.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> v7.6.0
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/pisces.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+  <script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+  <script src="//cdn.jsdelivr.net/npm/quicklink@1/dist/quicklink.umd.js"></script>
+  <script>
+      window.addEventListener('load', () => {
+      quicklink({
+        timeout: 3000,
+        priority: true,
+        ignores: [uri => uri.includes('#'),uri => uri == 'http://tinylaker.github.io/2019/12/24/Android-tombstone分析/',]
+      });
+      });
+  </script>
+
+</body>
+</html>
