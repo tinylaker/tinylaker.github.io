@@ -54,7 +54,7 @@
 <meta property="og:site_name" content="Tinylaker blog">
 <meta property="og:description" content="前言Android 进程在发生异常 Crash 时，debuggerd 会在 /data/tombstone 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2019-12-27T09:17:59.267Z">
+<meta property="og:updated_time" content="2019-12-27T09:18:12.217Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Android tombstone分析">
 <meta name="twitter:description" content="前言Android 进程在发生异常 Crash 时，debuggerd 会在 /data/tombstone 目录下生成对应的 tombstone 文件，保存该进程的基本信息、调用栈信息以及stack等。">
@@ -328,7 +328,7 @@
 <h1 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h1><p>结合 tombstone 文件中其他的日志信息，能够看出 AudioFlinger 线程中发生了 TimeCheck timeout</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">01-01 08:00:29.697  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:30.699  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:31.709  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:32.712  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:33.717  3148  3223 I ServiceManager: Waiting for service media.audio_policy...</span><br><span class="line">01-01 08:00:33.783  3148  3365 F         : TimeCheck timeout for IAudioFlinger</span><br><span class="line">01-01 08:00:33.817  3148  3223 W ServiceManager: Service media.audio_policy didn&apos;t start. Returning NULL</span><br><span class="line">01-01 08:00:33.817  3148  3223 W AudioSystem: AudioPolicyService not published, waiting..</span><br></pre></td></tr></table></figure>
 
-<p>结合使用场景，确认问题是系统启动过程中 Audio 设备没有接入引发的，导致 AudioServer 启动过程中无法创建对应的 AudioPolicyService 服务。</p>
+<p>结合使用场景，确认问题是系统启动过程中 Audio 设备没有接入引发的，导致 AudioServer 启动过程中无法创建对应的 AudioPolicyService。</p>
 
     </div>
 
